@@ -24,7 +24,7 @@ class UserManager(BaseUserManager):
 
     def create_superuser(self, email, password, **extra_fields):
         """
-        Create and save a SuperUser with the given email and password.
+        Create and save a SuperUser with the given email and password and extra fields.
         """
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
@@ -58,6 +58,9 @@ class User(AbstractBaseUser,PermissionsMixin):
         return self.email
 
 class Profile(models.Model):
+    '''
+    Custom Profile Model for Accounts app
+    '''
     user = models.ForeignKey(User, on_delete = models.CASCADE)
     first_name = models.CharField(max_length=256)
     last_name = models.CharField(max_length=256)
