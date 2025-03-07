@@ -3,12 +3,15 @@ from django.views.generic import TemplateView
 from .models import Post
 # Create your views here.
 def fbv_index(request):
+    '''
+    This is a function-based view to show index page
+    '''
     context = {'name':'mehdi'}
     return render(request, 'index.html',context)
 
 class IndexView(TemplateView):
     '''
-    This is a class-based view for index page
+    This is a class-based view to show index page
     '''
     template_name = 'index.html'
     
