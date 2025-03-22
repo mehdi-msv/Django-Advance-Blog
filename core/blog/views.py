@@ -41,12 +41,15 @@ class RedirectToDjango(RedirectView):
 
 class PostList(ListView):
     '''
-    
+
     '''
 #    model = Post
-#    queryset = Post.objects.filter(status=True)
+    queryset = Post.objects.filter(status=True)
     context_object_name = 'posts'
-    def get_queryset(self):
-        posts = Post.objects.filter(status=True)
-        return posts
+    ordering = '-published_date'
+    paginate_by = 2
+    # def get_queryset(self):
+    #     posts = Post.objects.filter(status=True)
+    #     return posts
+        
     

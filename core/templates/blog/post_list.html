@@ -13,13 +13,35 @@
         <link rel="stylesheet" href="">
     </head>
     <body>
-        {% for post in posts%}
-        <div>
-            <h1>{{post.title}}</h1>
-            <p1>{{post.content}}<p1>
-            <p2>{{post.category}}<p2>
+        <h1>blog posts</h1>
+        <ol>
+            {% for post in posts%}
+                <li>
+                    <h2>{{post.title}}</h2>
+                    <p>
+                    {{post.content}}
+                    </p>
+                    <small>{{post.category}}-{{post.date}}-{{post.author}}</small>
+                </li>
+            {% endfor %}
+        </ol>
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+        
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+        
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
         </div>
-        {% endfor %}
         <!--[if lt IE 7]>
             <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
         <![endif]-->
