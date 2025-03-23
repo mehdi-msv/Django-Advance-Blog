@@ -2,6 +2,7 @@ from django.shortcuts import render ,redirect
 from django.views.generic import TemplateView , RedirectView , ListView , DetailView , FormView , CreateView , UpdateView , DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin,PermissionRequiredMixin
 from .models import Post
+from accounts.models import Profile
 from .forms import ContactForm , PostForm
 # Create your views here.
 
@@ -89,7 +90,8 @@ class PostCreateView(LoginRequiredMixin,CreateView):
     def form_valid(self, form):
         # This method is called when valid form data has been POSTed.
         # It should return an HttpResponse.
-        form.instance.author = self.request.user
+        form.instance.author = Profile.objects.get(user=self.request.user)
+        print(type(Profile.objects.get(user=self.request.user)),type(self.request.user))
         return super(PostCreateView, self).form_valid(form)
     
 class PostEditView(LoginRequiredMixin,UpdateView):
