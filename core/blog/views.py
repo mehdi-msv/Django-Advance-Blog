@@ -1,5 +1,5 @@
 from django.shortcuts import render ,redirect
-from django.views.generic import TemplateView , RedirectView , ListView , DetailView , FormView , CreateView , UpdateView 
+from django.views.generic import TemplateView , RedirectView , ListView , DetailView , FormView , CreateView , UpdateView , DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Post
 from .forms import ContactForm , PostForm
@@ -100,4 +100,11 @@ class PostEditView(UpdateView):
     model = Post
     form_class = PostForm
     success_url = '/blog/posts'
-        
+
+class PostDeleteView(DeleteView):
+    '''
+    This is a class-based view to delete an existing post.
+    '''
+    model = Post
+    success_url = '/blog/posts/'
+    

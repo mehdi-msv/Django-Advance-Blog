@@ -12,6 +12,7 @@ urlpatterns = [
     path('contact/', views.ContactView.as_view(), name='contact-us'),
     path('create/', views.PostCreateView.as_view(), name='post-create'),
     path('post/<int:pk>/edit', views.PostEditView.as_view(), name='post-edit'),
+    path('post/<int:pk>/delete', views.PostDeleteView.as_view(), name='post-delete'),
 ]
 
 '''+=
