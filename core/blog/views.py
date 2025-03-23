@@ -1,6 +1,6 @@
 from django.shortcuts import render ,redirect
 from django.views.generic import TemplateView , RedirectView , ListView , DetailView , FormView , CreateView , UpdateView , DeleteView
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin,PermissionRequiredMixin
 from .models import Post
 from .forms import ContactForm , PostForm
 # Create your views here.
@@ -44,10 +44,11 @@ class RedirectToDjango(RedirectView):
         print(post)
         return super().get_redirect_url(*args, **kwargs)
 
-class PostListView(ListView):
+class PostListView(PermissionRequiredMixin,ListView):
     '''
     This is a class-based view to show list of posts.
     '''
+    permission_required = "blog.view_post"
 #    model = Post
     queryset = Post.objects.filter(status=True)
     context_object_name = 'posts'
@@ -57,7 +58,7 @@ class PostListView(ListView):
     #     posts = Post.objects.filter(status=True)
     #     return posts
         
-class PostDetailView(DetailView):
+class PostDetailView(LoginRequiredMixin,DetailView):
     '''
     This is a class-based view to show detail page of a post.
     '''
@@ -81,8 +82,6 @@ class PostCreateView(LoginRequiredMixin,CreateView):
     '''
     This is a class-based view to create a new post.
     '''
-    login_url = "/admin"
-    redirect_field_name = "/blog/" 
     model = Post
 #   fields = ['title', 'content', 'category', 'status', 'published_date'] ##can use it instead of form_class
     form_class = PostForm
@@ -93,7 +92,7 @@ class PostCreateView(LoginRequiredMixin,CreateView):
         form.instance.author = self.request.user
         return super(PostCreateView, self).form_valid(form)
     
-class PostEditView(UpdateView):
+class PostEditView(LoginRequiredMixin,UpdateView):
     '''
     This is a class-based view to edit an existing post.
     '''
@@ -101,7 +100,7 @@ class PostEditView(UpdateView):
     form_class = PostForm
     success_url = '/blog/posts'
 
-class PostDeleteView(DeleteView):
+class PostDeleteView(LoginRequiredMixin,DeleteView):
     '''
     This is a class-based view to delete an existing post.
     '''
