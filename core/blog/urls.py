@@ -5,12 +5,13 @@ from . import views
 app_name = 'blog'
 
 urlpatterns = [
-    path('index/', views.IndexView.as_view(), name='cbv_index'),
-    path('redirect-to-django/<int:pk>/', views.RedirectToDjango.as_view(), name='redirect_to_django'),
-    path('posts/', views.PostListView.as_view(), name='post_list'),
-    path('posts/<int:pk>/', views.PostDetailView.as_view(), name='post_detail'),
+    path('index/', views.IndexView.as_view(), name='index'),
+    path('redirect-to-django/<int:pk>/', views.RedirectToDjango.as_view(), name='redirect-to-django'),
+    path('posts/', views.PostListView.as_view(), name='post-list'),
+    path('post/<int:pk>/', views.PostDetailView.as_view(), name='post-detail'),
     path('contact/', views.ContactView.as_view(), name='contact-us'),
-    path('create/', views.PostCreateView.as_view(), name='post_create'),
+    path('create/', views.PostCreateView.as_view(), name='post-create'),
+    path('post/<int:pk>/edit', views.PostEditView.as_view(), name='post-edit'),
 ]
 
 '''+=

@@ -1,5 +1,5 @@
 from django.shortcuts import render ,redirect
-from django.views.generic import TemplateView , RedirectView , ListView , DetailView , FormView , CreateView
+from django.views.generic import TemplateView , RedirectView , ListView , DetailView , FormView , CreateView , UpdateView 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Post
 from .forms import ContactForm , PostForm
@@ -93,3 +93,11 @@ class PostCreateView(LoginRequiredMixin,CreateView):
         form.instance.author = self.request.user
         return super(PostCreateView, self).form_valid(form)
     
+class PostEditView(UpdateView):
+    '''
+    This is a class-based view to edit an existing post.
+    '''
+    model = Post
+    form_class = PostForm
+    success_url = '/blog/posts'
+        
