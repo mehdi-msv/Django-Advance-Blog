@@ -87,4 +87,9 @@ class PostCreateView(LoginRequiredMixin,CreateView):
 #   fields = ['title', 'content', 'category', 'status', 'published_date'] ##can use it instead of form_class
     form_class = PostForm
     success_url = '/blog/posts/'
+    def form_valid(self, form):
+        # This method is called when valid form data has been POSTed.
+        # It should return an HttpResponse.
+        form.instance.author = self.request.user
+        return super(PostCreateView, self).form_valid(form)
     
