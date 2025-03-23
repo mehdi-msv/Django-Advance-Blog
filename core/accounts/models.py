@@ -65,7 +65,7 @@ class Profile(models.Model):
     first_name = models.CharField(max_length=256)
     last_name = models.CharField(max_length=256)
     image = models.ImageField(blank=True,null=True)
-    description = models.TextField()
+    description = models.TextField(blank=True,null=True)
     
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)

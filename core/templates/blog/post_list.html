@@ -27,7 +27,7 @@
                     <p>
                     {{post.content}}
                     </p>
-                    <small>{{post.category}}-{{post.date}}-{{post.author}}</small>
+                    <small>{{post.author.first_name}} {{post.author.last_name}} - {{post.category}} - {{post.published_date}}</small>
                 </li>
             {% endfor %}
         </ol>
