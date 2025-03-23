@@ -1,6 +1,7 @@
 from django.shortcuts import render ,redirect
-from django.views.generic import TemplateView , RedirectView , ListView , DetailView
+from django.views.generic import TemplateView , RedirectView , ListView , DetailView , FormView
 from .models import Post
+from .forms import ContactForm
 # Create your views here.
 
 # Function-based view to show index page
@@ -62,4 +63,13 @@ class PostDetailView(DetailView):
     model = Post
     context_object_name = 'post' # for using post instead of object in template
 #    template_name = 'blog/post_detail.html'
+class ContactView(FormView):
+    template_name = 'blog/contact_us.html'
+    form_class = ContactForm
+    success_url = '/blog/posts/'
+ 
+    def form_valid(self, form):
+        # This method is called when valid form data has been POSTed.
+        # It should return an HttpResponse.
+        return super(ContactView, self).form_valid(form)
     
