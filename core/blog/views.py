@@ -1,7 +1,8 @@
 from django.shortcuts import render ,redirect
-from django.views.generic import TemplateView , RedirectView , ListView , DetailView , FormView
+from django.views.generic import TemplateView , RedirectView , ListView , DetailView , FormView , CreateView
+from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Post
-from .forms import ContactForm
+from .forms import ContactForm , PostForm
 # Create your views here.
 
 # Function-based view to show index page
@@ -62,8 +63,11 @@ class PostDetailView(DetailView):
     '''
     model = Post
     context_object_name = 'post' # for using post instead of object in template
-#    template_name = 'blog/post_detail.html'
+#   template_name = 'blog/post_detail.html'
 class ContactView(FormView):
+    '''
+    This is a class-based view to show contact form.
+    '''
     template_name = 'blog/contact_us.html'
     form_class = ContactForm
     success_url = '/blog/posts/'
@@ -72,4 +76,15 @@ class ContactView(FormView):
         # This method is called when valid form data has been POSTed.
         # It should return an HttpResponse.
         return super(ContactView, self).form_valid(form)
+
+class PostCreateView(LoginRequiredMixin,CreateView):
+    '''
+    This is a class-based view to create a new post.
+    '''
+    login_url = "/admin"
+    redirect_field_name = "/blog/" 
+    model = Post
+#   fields = ['title', 'content', 'category', 'status', 'published_date'] ##can use it instead of form_class
+    form_class = PostForm
+    success_url = '/blog/posts/'
     

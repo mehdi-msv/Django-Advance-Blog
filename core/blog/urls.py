@@ -9,7 +9,8 @@ urlpatterns = [
     path('redirect-to-django/<int:pk>/', views.RedirectToDjango.as_view(), name='redirect_to_django'),
     path('posts/', views.PostListView.as_view(), name='post_list'),
     path('posts/<int:pk>/', views.PostDetailView.as_view(), name='post_detail'),
-    path('contact/', views.ContactView.as_view(), name='contact-us')
+    path('contact/', views.ContactView.as_view(), name='contact-us'),
+    path('create/', views.PostCreateView.as_view(), name='post_create'),
 ]
 
 '''+=
