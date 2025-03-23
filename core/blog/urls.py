@@ -5,10 +5,10 @@ from . import views
 app_name = 'blog'
 
 urlpatterns = [
-    path('cbv-index', views.IndexView.as_view(), name='cbv_index'),
-    path('redirect-to-django/<int:pk>', views.RedirectToDjango.as_view(), name='redirect_to_django'),
+    path('index/', views.IndexView.as_view(), name='cbv_index'),
+    path('redirect-to-django/<int:pk>/', views.RedirectToDjango.as_view(), name='redirect_to_django'),
     path('posts/', views.PostListView.as_view(), name='post_list'),
-    path('posts/<int:pk>', views.PostDetailView.as_view(), name='post_detail')
+    path('posts/<int:pk>/', views.PostDetailView.as_view(), name='post_detail')
 ]
 
 '''+=
