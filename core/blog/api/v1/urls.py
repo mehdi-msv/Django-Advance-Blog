@@ -6,6 +6,7 @@ app_name = 'api-v1'
 
 
 urlpatterns = [
-    path('posts/',views.postlist,name='post-list')
+    path('posts/',views.postList,name='post-list'),
+    path('post/<int:id>/',views.postDetail,name='post-detail')
 
 ]
