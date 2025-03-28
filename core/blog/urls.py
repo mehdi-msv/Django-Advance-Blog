@@ -5,14 +5,15 @@ from . import views
 app_name = 'blog'
 
 urlpatterns = [
-    path('index/', views.IndexView.as_view(), name='index'),
-    path('redirect-to-django/<int:pk>/', views.RedirectToDjango.as_view(), name='redirect-to-django'),
-    path('posts/', views.PostListView.as_view(), name='post-list'),
-    path('post/<int:pk>/', views.PostDetailView.as_view(), name='post-detail'),
-    path('contact/', views.ContactView.as_view(), name='contact-us'),
-    path('create/', views.PostCreateView.as_view(), name='post-create'),
-    path('post/<int:pk>/edit', views.PostEditView.as_view(), name='post-edit'),
-    path('post/<int:pk>/delete', views.PostDeleteView.as_view(), name='post-delete'),
+    # path('index/', views.IndexView.as_view(), name='index'),
+    # path('redirect-to-django/<int:pk>/', views.RedirectToDjango.as_view(), name='redirect-to-django'),
+    # path('posts/', views.PostListView.as_view(), name='post-list'),
+    # path('post/<int:pk>/', views.PostDetailView.as_view(), name='post-detail'),
+    # path('contact/', views.ContactView.as_view(), name='contact-us'),
+    # path('create/', views.PostCreateView.as_view(), name='post-create'),
+    # path('post/<int:pk>/edit', views.PostEditView.as_view(), name='post-edit'),
+    # path('post/<int:pk>/delete', views.PostDeleteView.as_view(), name='post-delete'),
+    path('posts/', views.api_post_list_view, name='api-post-list'),
 ]
 
 '''+=

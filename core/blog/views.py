@@ -4,6 +4,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin,PermissionRequiredMixi
 from .models import Post
 from accounts.models import Profile
 from .forms import ContactForm , PostForm
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 # Create your views here.
 
 # Function-based view to show index page
@@ -108,4 +110,7 @@ class PostDeleteView(LoginRequiredMixin,DeleteView):
     '''
     model = Post
     success_url = '/blog/posts/'
-    
+
+@api_view()
+def api_post_list_view(request):
+    return Response({'name:mehdi'})
