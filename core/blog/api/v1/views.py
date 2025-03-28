@@ -17,7 +17,7 @@ def postList(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-@api_view(["GET", "PUT"])
+@api_view(["GET", "PUT", "DELETE"])
 def postDetail(request,id):
     # try:
     #     post = Post.objects.get(pk=id)
@@ -34,5 +34,7 @@ def postDetail(request,id):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
-    
+    elif request.method == "DELETE":
+        post.delete()
+        return Response({"detail": "Your post has been successfully removed."},status=status.HTTP_204_NO_CONTENT)
     
