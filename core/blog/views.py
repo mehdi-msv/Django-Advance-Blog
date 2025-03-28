@@ -2,7 +2,7 @@ from django.shortcuts import render ,redirect
 from django.views.generic import TemplateView , RedirectView , ListView , DetailView , FormView , CreateView , UpdateView , DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin,PermissionRequiredMixin
 from .models import Post
-from accounts.models import Profile
+from accounts.models import Profile, User
 from .forms import ContactForm , PostForm
 
 # Create your views here.
@@ -92,7 +92,6 @@ class PostCreateView(LoginRequiredMixin,CreateView):
         # This method is called when valid form data has been POSTed.
         # It should return an HttpResponse.
         form.instance.author = Profile.objects.get(user=self.request.user)
-        print(type(Profile.objects.get(user=self.request.user)),type(self.request.user))
         return super(PostCreateView, self).form_valid(form)
     
 class PostEditView(LoginRequiredMixin,UpdateView):
@@ -102,11 +101,16 @@ class PostEditView(LoginRequiredMixin,UpdateView):
     model = Post
     form_class = PostForm
     success_url = '/blog/posts'
-
+    def get_queryset(self):
+        return Post.objects.filter(author__user=self.request.user)
+    
+    
 class PostDeleteView(LoginRequiredMixin,DeleteView):
     '''
     This is a class-based view to delete an existing post.
     '''
     model = Post
     success_url = '/blog/posts/'
+    def get_queryset(self):
+        return Post.objects.filter(author__user=self.request.user)
 
