@@ -6,6 +6,8 @@ from ...models import Post , Category
 from rest_framework import status
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.decorators import action
+
 """
 # from rest_framework.decorators import api_view,permission_classes
 
@@ -134,7 +136,10 @@ class PostModelViewSet(ModelViewSet):
     queryset = Post.objects.filter(status=True)
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-    
+    @action(detail=False,methods=['get'])
+    def get_ok(self,request):
+        return Response({"detail": "API is working correctly."}, status=status.HTTP_200_OK)
+        
     
 class CategoryModelViewSet(ModelViewSet):
     '''
