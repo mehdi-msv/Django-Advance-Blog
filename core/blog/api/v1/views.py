@@ -127,6 +127,10 @@ class PostDetail(RetrieveUpdateDestroyAPIView):
 """
 
 class PostViewSet(ModelViewSet):
+    '''
+    This class-based view provides an API endpoint for listing,
+    creating, retrieving, updating, and deleting posts.
+    '''
     queryset = Post.objects.filter(status=True)
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
