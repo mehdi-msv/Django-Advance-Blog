@@ -5,7 +5,7 @@ from .serializers import PostSerializer
 from ...models import Post
 from rest_framework import status
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
-
+from rest_framework.viewsets import ModelViewSet
 """
 # from rest_framework.decorators import api_view,permission_classes
 
@@ -103,6 +103,7 @@ class PostDetail(APIView):
         post.delete()
         return Response({"detail": "Your post has been successfully removed."},status=status.HTTP_204_NO_CONTENT)
 """
+"""
 class PostList(ListCreateAPIView):
     '''
     This class-based view provides an API endpoint for listing and creating posts.
@@ -123,3 +124,19 @@ class PostDetail(RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         self.perform_destroy(instance)
         return Response({"detail": "Your post has been successfully removed."},status=status.HTTP_204_NO_CONTENT)
+"""
+
+class PostViewSet(ModelViewSet):
+    queryset = Post.objects.filter(status=True)
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
