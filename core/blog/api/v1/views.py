@@ -1,8 +1,8 @@
 
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
-from .serializers import PostSerializer
-from ...models import Post
+from .serializers import PostSerializer , CategorySerializer
+from ...models import Post , Category
 from rest_framework import status
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.viewsets import ModelViewSet
@@ -126,7 +126,7 @@ class PostDetail(RetrieveUpdateDestroyAPIView):
         return Response({"detail": "Your post has been successfully removed."},status=status.HTTP_204_NO_CONTENT)
 """
 
-class PostViewSet(ModelViewSet):
+class PostModelViewSet(ModelViewSet):
     '''
     This class-based view provides an API endpoint for listing,
     creating, retrieving, updating, and deleting posts.
@@ -134,15 +134,13 @@ class PostViewSet(ModelViewSet):
     queryset = Post.objects.filter(status=True)
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
-    def create(self, request, *args, **kwargs):
-        return super().create(request, *args, **kwargs)
-    def retrieve(self, request, *args, **kwargs):
-        return super().retrieve(request, *args, **kwargs)
-    def update(self, request, *args, **kwargs):
-        return super().update(request, *args, **kwargs)
-    def destroy(self, request, *args, **kwargs):
-        return super().destroy(request, *args, **kwargs)
-    def partial_update(self, request, *args, **kwargs):
-        return super().partial_update(request, *args, **kwargs)
+    
+    
+class CategoryModelViewSet(ModelViewSet):
+    '''
+    This class-based view provides an API endpoint for listing,
+    creating, retrieving, updating, and deleting categories.
+    '''
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
