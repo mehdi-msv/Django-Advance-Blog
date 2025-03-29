@@ -25,6 +25,8 @@ class PostList(APIView):
     '''
     This class-based view provides an API endpoint for listing and creating posts.
     '''
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    serializer_class = PostSerializer
     def get(request, self):
         '''
         Retrieve all posts.
