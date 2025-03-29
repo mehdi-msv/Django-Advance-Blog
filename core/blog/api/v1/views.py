@@ -4,8 +4,7 @@ from rest_framework.response import Response
 from .serializers import PostSerializer
 from ...models import Post
 from rest_framework import status
-from django.shortcuts import get_object_or_404
-from rest_framework.views import APIView
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 
 """
 # from rest_framework.decorators import api_view,permission_classes
@@ -47,6 +46,9 @@ def postDetail(request,id):
         post.delete()
         return Response({"detail": "Your post has been successfully removed."},status=status.HTTP_204_NO_CONTENT)
     """
+
+"""
+#from rest_framework.views import APIView
 
 class PostList(APIView):
     '''
@@ -99,4 +101,25 @@ class PostDetail(APIView):
         '''
         post = get_object_or_404(Post,pk=id,status=True)
         post.delete()
+        return Response({"detail": "Your post has been successfully removed."},status=status.HTTP_204_NO_CONTENT)
+"""
+class PostList(ListCreateAPIView):
+    '''
+    This class-based view provides an API endpoint for listing and creating posts.
+    '''
+    queryset = Post.objects.filter(status=True)
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+class PostDetail(RetrieveUpdateDestroyAPIView):
+    '''
+    This class-based view provides an API endpoint for retrieving, updating, and deleting posts.
+    '''
+    lookup_field = 'id'
+    queryset = Post.objects.filter(status=True)
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
         return Response({"detail": "Your post has been successfully removed."},status=status.HTTP_204_NO_CONTENT)
