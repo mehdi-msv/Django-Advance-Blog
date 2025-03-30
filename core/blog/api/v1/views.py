@@ -8,6 +8,8 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from .permissions import IsOwnerOrReadOnly , IsAdminOrReadOnly
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 """
 # from rest_framework.decorators import api_view,permission_classes
 
@@ -136,6 +138,11 @@ class PostModelViewSet(ModelViewSet):
     queryset = Post.objects.filter(status=True)
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly]
+    filter_backends = [DjangoFilterBackend,filters.SearchFilter,filters.OrderingFilter]
+    filterset_fields = ['author','category', 'status']
+    search_fields = ['author__user__email' ,'title', 'content', 'category__name']
+    ordering_fields = ['published_date']
+    
     @action(detail=False,methods=['get'])
     def get_ok(self,request):
         return Response({"detail": "API is working correctly."}, status=status.HTTP_200_OK)
