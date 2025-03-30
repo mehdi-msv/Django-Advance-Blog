@@ -135,7 +135,7 @@ class PostModelViewSet(ModelViewSet):
     '''
     queryset = Post.objects.filter(status=True)
     serializer_class = PostSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticated]
     @action(detail=False,methods=['get'])
     def get_ok(self,request):
         return Response({"detail": "API is working correctly."}, status=status.HTTP_200_OK)
