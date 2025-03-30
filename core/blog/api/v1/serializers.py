@@ -7,11 +7,26 @@ from accounts.models import Profile
 #     id = serializers.IntegerField()
 
 class CategorySerializer(serializers.ModelSerializer):
+    absolute_url = serializers.SerializerMethodField(read_only=True)
     
     class Meta:
         model = Category
-        fields = ['id', 'name']
-        
+        fields = ['id' ,'name','absolute_url']
+    
+    def get_absolute_url(self,obj):
+        request = self.context.get('request')
+        absolute_url = obj.get_absolute_api_url()
+        return request.build_absolute_uri(absolute_url)
+    
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        rep =  super().to_representation(instance)
+        if request.parser_context.get('kwargs').get('pk'):
+            rep.pop('absolute_url', None)
+        if not request.user.is_staff:
+            rep.pop('absolute_url', None)
+            return rep
+        return rep
         
 class PostSerializer(serializers.ModelSerializer):
     # content = serializers.CharField(read_only=True)
@@ -33,16 +48,22 @@ class PostSerializer(serializers.ModelSerializer):
         absolute_url = obj.get_absolute_api_url()
         return request.build_absolute_uri(absolute_url)
     def to_representation(self, instance):
+        
         request = self.context.get('request')
-        repo = super().to_representation(instance)
-        repo['category'] = CategorySerializer(instance.category).data
+        rep = super().to_representation(instance)
+        rep['category'] = CategorySerializer(instance.category,context={'request':request}).data # if use nested serializer the request must be sent in context
+        
         if request.parser_context.get('kwargs').get('pk'):
-            repo.pop('snippet', None)
-            repo.pop('absolute_url', None)
-            repo.pop('relative_url', None)
+            rep.pop('snippet', None)
+            rep.pop('absolute_url', None)
+            rep.pop('relative_url', None)
+            
         else:
-            repo.pop('content')
-        return repo
+            rep.pop('content')
+        
+        if not rep['category']['name']:
+            rep['category']['name'] = 'Uncategorized'
+        return rep
     def create(self, validated_data):
         request = self.context.get('request')
         validated_data['author'] = Profile.objects.filter(user__id=request.user.id)

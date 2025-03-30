@@ -1,5 +1,5 @@
 
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from .serializers import PostSerializer , CategorySerializer
 from ...models import Post , Category
@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
-
+from .permissions import IsOwnerOrReadOnly , IsAdminOrReadOnly
 """
 # from rest_framework.decorators import api_view,permission_classes
 
@@ -135,7 +135,7 @@ class PostModelViewSet(ModelViewSet):
     '''
     queryset = Post.objects.filter(status=True)
     serializer_class = PostSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly]
     @action(detail=False,methods=['get'])
     def get_ok(self,request):
         return Response({"detail": "API is working correctly."}, status=status.HTTP_200_OK)
@@ -148,4 +148,4 @@ class CategoryModelViewSet(ModelViewSet):
     '''
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdminOrReadOnly]

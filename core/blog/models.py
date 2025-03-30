@@ -40,3 +40,5 @@ class Category(models.Model):
     def __str__(self):
         return self.name
     
+    def get_absolute_api_url(self):
+        return reverse("blog:api-v1:category-detail", kwargs={"pk": self.pk})
