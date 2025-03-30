@@ -10,6 +10,9 @@ from rest_framework.decorators import action
 from .permissions import IsOwnerOrReadOnly , IsAdminOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
+from .paginations import PostsPagination
+
+
 """
 # from rest_framework.decorators import api_view,permission_classes
 
@@ -142,7 +145,7 @@ class PostModelViewSet(ModelViewSet):
     filterset_fields = ['author','category', 'status']
     search_fields = ['author__user__email' ,'title', 'content', 'category__name']
     ordering_fields = ['published_date']
-    
+    pagination_class = PostsPagination
     @action(detail=False,methods=['get'])
     def get_ok(self,request):
         return Response({"detail": "API is working correctly."}, status=status.HTTP_200_OK)
