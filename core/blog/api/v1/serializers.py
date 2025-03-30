@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from ...models import Post, Category
+from accounts.models import Profile
 # class PostSerializer(serializers.Serializer):
     
 #     title = serializers.CharField(max_length=255)
@@ -25,7 +26,7 @@ class PostSerializer(serializers.ModelSerializer):
             'relative_url' , 'absolute_url' , 'category'  , 'snippet' ,
             'created_date', 'published_date'
             ]
-        # read_only_fields = ['content']
+        read_only_fields = ['author']
 
     def get_absolute_url(self,obj):
         request = self.context.get('request')
@@ -42,3 +43,7 @@ class PostSerializer(serializers.ModelSerializer):
         else:
             repo.pop('content')
         return repo
+    def create(self, validated_data):
+        request = self.context.get('request')
+        validated_data['author'] = Profile.objects.filter(user__id=request.user.id)
+        return super().create(validated_data)
