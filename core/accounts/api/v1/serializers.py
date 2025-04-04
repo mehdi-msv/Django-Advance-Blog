@@ -1,12 +1,12 @@
 from rest_framework import serializers
-from ...models import User
+from ...models import User, Profile
 from django.contrib.auth.password_validation import validate_password
 from django.core import exceptions
 from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy as _
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
-
+import re
 
 class CustomAuthTokenSerializer(serializers.Serializer):
     email = serializers.CharField(
@@ -96,4 +96,24 @@ class ChangePasswordSerializer(serializers.Serializer):
         except exceptions.ValidationError as e:
             raise serializers.ValidationError({'new_password': list(e.messages)})
 
+        return attrs
+    
+class ProfileSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source='user.email', read_only=True)
+    class Meta:
+        model = Profile
+        fields = ['id', 'email', 'first_name', 'last_name']
+        
+    def validate(self, attrs):
+        name_pattern = r'^[A-Za-z\s]+$'
+        errors = {}
+        first_name = attrs.get('first_name')
+        if not re.match(name_pattern, first_name):
+            errors['first_name'] = "First name must contain only letters."
+
+        last_name = attrs.get('last_name')
+        if not re.match(name_pattern, last_name):
+            errors['last_name'] = "Last name must contain only letters."
+        if errors:
+            raise serializers.ValidationError(errors)
         return attrs

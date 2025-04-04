@@ -1,12 +1,15 @@
-from rest_framework.generics import GenericAPIView
-from .serializers import RegistrationSerializer, CustomAuthTokenSerializer, ChangePasswordSerializer
+from rest_framework.generics import GenericAPIView, RetrieveUpdateAPIView
+from .serializers import (RegistrationSerializer, CustomAuthTokenSerializer,
+                          ChangePasswordSerializer, ProfileSerializer)
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from django.contrib.auth import get_user_model
+from ...models import Profile
+from django.shortcuts import get_object_or_404
+
 
 class RegistrationAPIView(GenericAPIView):
     serializer_class = RegistrationSerializer
@@ -65,3 +68,20 @@ class ChangePasswordAPIView(GenericAPIView):
             return Response({"success": "Password updated successfully"}, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ProfileAPIView(RetrieveUpdateAPIView):
+    serializer_class = ProfileSerializer
+    permission_classes = [IsAuthenticated]
+    def get_object(self):
+        obj = get_object_or_404(Profile, user=self.request.user)
+        return obj
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"success": "Profile updated successfully", "data": serializer.data})
+
+        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
