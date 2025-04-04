@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from ...models import Profile
 from django.shortcuts import get_object_or_404
-
+from .permissions import IsVerified
 
 class RegistrationAPIView(GenericAPIView):
     serializer_class = RegistrationSerializer
@@ -28,7 +28,7 @@ class RegistrationAPIView(GenericAPIView):
 
 
 class CustomObtainAuthToken(ObtainAuthToken):
-
+    permission_classes = [IsAuthenticated, IsVerified]
     serializer_class = CustomAuthTokenSerializer
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data,

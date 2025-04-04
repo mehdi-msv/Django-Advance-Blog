@@ -6,14 +6,14 @@ from .models import User,Profile
 
 
 class CustomUserAdmin(UserAdmin):
-    list_display = ('email', 'is_superuser', 'is_staff', 'is_active')
-    list_filter = ('email','is_superuser', 'is_staff', 'is_active')
+    list_display = ('email', 'is_superuser', 'is_staff', 'is_active', 'is_verified')
+    list_filter = ('email','is_superuser', 'is_staff', 'is_active', 'is_verified')
     search_fields = ('email',)
     ordering = ("email",)
     
     fieldsets = (
         ('Authentications', {'fields': ('email', 'password')}),
-        ('Permissions', {'fields': ('is_superuser', 'is_staff', 'is_active')}),
+        ('Permissions', {'fields': ('is_superuser', 'is_staff', 'is_active', 'is_verified')}),
         ('Group Permissions', {'fields': ('groups','user_permissions')}),
         ('Important Dates', {'fields': ('last_login',)}),
     )
@@ -25,7 +25,7 @@ class CustomUserAdmin(UserAdmin):
         }),
         ("Permissions", {
             'classes': ('wide',),
-            'fields': ('is_superuser', 'is_staff', 'is_active'),
+            'fields': ('is_superuser', 'is_staff', 'is_active', 'is_verified'),
         }))
 admin.site.register(Profile)
 admin.site.register(User, CustomUserAdmin)
