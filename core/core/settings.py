@@ -152,3 +152,10 @@ REST_FRAMEWORK = {
                     
     ]
                   }
+
+# JWT settings
+
+SIMPLE_JWT = {
+  # It will work instead of the default serializer(TokenObtainPairSerializer).
+  "TOKEN_OBTAIN_SERIALIZER": "accounts.api.v1.serializers.CustomTokenObtainPairSerializer",
+}
