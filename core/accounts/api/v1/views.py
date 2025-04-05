@@ -10,7 +10,8 @@ from rest_framework.permissions import IsAuthenticated
 from ...models import Profile
 from django.shortcuts import get_object_or_404
 from .permissions import IsVerified
-from mail_templated import send_mail
+from mail_templated import EmailMessage
+from ..utils import EmailThread
 class RegistrationAPIView(GenericAPIView):
     serializer_class = RegistrationSerializer
     def post(self, request, *args, **kwargs):
@@ -86,7 +87,9 @@ class ProfileAPIView(RetrieveUpdateAPIView):
 
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
     
-class SendmailTest(GenericAPIView):
+class SendEmailTest(GenericAPIView):
     def post(self, request, *args, **kwargs):
-        send_mail('email/hello.tpl', {'user': request.user}, 'mehdi.hunter.3242@gmail.com', [request.user.email])
+        message = EmailMessage('email/hello.tpl', {'user': request.user}, 'mehdi.hunter.3242@gmail.com',
+                       to=[request.user.email])
+        EmailThread(message).start()
         return Response({"success": "Email sent successfully"}, status=status.HTTP_200_OK)
