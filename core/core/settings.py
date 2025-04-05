@@ -139,6 +139,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # User manager config
 AUTH_USER_MODEL = "accounts.User"
 
+# Mail configuration
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 # Rest frame work settings
 
 REST_FRAMEWORK = { 

@@ -10,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from ...models import Profile
 from django.shortcuts import get_object_or_404
 from .permissions import IsVerified
+from django.core.mail import send_mail
 
 class RegistrationAPIView(GenericAPIView):
     serializer_class = RegistrationSerializer
@@ -85,3 +86,14 @@ class ProfileAPIView(RetrieveUpdateAPIView):
             return Response({"success": "Profile updated successfully", "data": serializer.data})
 
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+    
+class SendmailTest(GenericAPIView):
+    def post(self, request, *args, **kwargs):
+        send_mail(
+            'Test Email',
+            'This is a test email.',
+            'noreply@example.com',
+            ['your_email@example.com'],
+            fail_silently=False,
+        )
+        return Response({"success": "Email sent successfully"}, status=status.HTTP_200_OK)

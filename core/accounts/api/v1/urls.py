@@ -18,5 +18,6 @@ urlpatterns = [
     path('jwt/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('jwt/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('change-password', views.ChangePasswordAPIView.as_view(), name='change-password'),
-    path('profile/',views.ProfileAPIView.as_view(), name='profile'),
+    path('profile/', views.ProfileAPIView.as_view(), name='profile'),
+    path('test-email/', views.SendmailTest.as_view(), name='test-email'),
 ]
