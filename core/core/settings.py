@@ -173,5 +173,7 @@ REST_FRAMEWORK = {
 
 SIMPLE_JWT = {
   # It will work instead of the default serializer(TokenObtainPairSerializer).
-  "TOKEN_OBTAIN_SERIALIZER": "accounts.api.v1.serializers.CustomTokenObtainPairSerializer",
+    "TOKEN_OBTAIN_SERIALIZER": "accounts.api.v1.serializers.CustomTokenObtainPairSerializer",
+    'ALGORITHM': config('ALGORITHM',default='HS256'),
+    'SIGNING_KEY': config('SIGNING_KEY',default=SECRET_KEY),
 }

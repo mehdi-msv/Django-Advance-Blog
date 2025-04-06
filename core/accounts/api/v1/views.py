@@ -10,10 +10,11 @@ from rest_framework.permissions import IsAuthenticated
 from ...models import Profile
 from django.shortcuts import get_object_or_404
 from .permissions import IsVerified
-from mail_templated import EmailMessage
 from ..utils import EmailVerificationThread
-from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
+import jwt
+from core.settings import SIMPLE_JWT
+
 
 User = get_user_model()
 
@@ -26,10 +27,9 @@ class RegistrationAPIView(GenericAPIView):
 
         serializer.save()
         email = serializer.validated_data['email']
-        self.send_email_verification(email)
+        user = User.objects.get(email=email)
+        EmailVerificationThread(user).start()
         return Response({'email': email}, status=status.HTTP_201_CREATED)
-    def send_email_verification(self, email):
-        EmailVerificationThread(email).start()
 
 class CustomObtainAuthToken(ObtainAuthToken):
     permission_classes = [IsAuthenticated, IsVerified]
@@ -92,5 +92,38 @@ class ProfileAPIView(RetrieveUpdateAPIView):
     
 class ActivationAPIView(APIView):
     def get(self, request, *args, **kwargs):
-        
-        return Response(kwargs['token'])
+        token = kwargs['token']
+        try:
+            token_decoded = jwt.decode(
+            token,SIMPLE_JWT['SIGNING_KEY'],
+            algorithms=[SIMPLE_JWT['ALGORITHM']],
+            )
+            user = User.objects.get(id=token_decoded['user_id'])
+        except jwt.exceptions.InvalidSignatureError:
+            return Response({"detail": "Invalid activation token."}, status=status.HTTP_400_BAD_REQUEST)
+        except jwt.exceptions.InvalidSignatureError:
+            return Response({"detail": "Invalid activation token."}, status=status.HTTP_400_BAD_REQUEST)
+        except jwt.exceptions.ExpiredSignatureError:
+            return Response({"detail": "Activation token has expired."}, status=status.HTTP_400_BAD_REQUEST)
+        if not user.is_verified:
+                user.is_verified = True
+                user.save()
+                return Response({"detail": "Your account has been successfully verified."}, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "Your account is already verified."}, status=status.HTTP_400_BAD_REQUEST)
+
+class ActivationResendAPIView(APIView):
+    def post(self, request, *args, **kwargs):
+        email = request.data.get('email')
+        if not email:
+            return Response({"detail": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({"detail": "User with this email does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if user.is_verified:
+            return Response({"detail": "Your account is already verified."}, status=status.HTTP_400_BAD_REQUEST)
+
+        EmailVerificationThread(user).start()
+        return Response({"detail": "Verification email sent."}, status=status.HTTP_200_OK)
