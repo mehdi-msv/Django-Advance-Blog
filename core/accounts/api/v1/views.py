@@ -11,7 +11,7 @@ from ...models import Profile
 from django.shortcuts import get_object_or_404
 from .permissions import IsVerified
 from mail_templated import EmailMessage
-from ..utils import EmailThread
+from ..utils import EmailVerificationThread
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 
@@ -20,18 +20,16 @@ User = get_user_model()
 class RegistrationAPIView(GenericAPIView):
     serializer_class = RegistrationSerializer
     def post(self, request, *args, **kwargs):
-        serializer = RegistrationSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            data = {
-                'email': serializer.validated_data['email'],
-            }
-            return Response(data, status=status.HTTP_201_CREATED)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+        serializer.save()
+        email = serializer.validated_data['email']
+        self.send_email_verification(email)
+        return Response({'email': email}, status=status.HTTP_201_CREATED)
+    def send_email_verification(self, email):
+        EmailVerificationThread(email).start()
 
 class CustomObtainAuthToken(ObtainAuthToken):
     permission_classes = [IsAuthenticated, IsVerified]
@@ -92,19 +90,7 @@ class ProfileAPIView(RetrieveUpdateAPIView):
 
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
     
-class SendEmailTest(GenericAPIView):
-    def post(self, request, *args, **kwargs):
-        self.email = 'admin@admin.com'
-        user_obj = get_object_or_404(User, email=self.email)
-        token = self.get_tokens_for_user(user_obj)
-        message = EmailMessage(
-            'email/hello.tpl', {'user': request.user, 'token':token},
-                               'mehdi.hunter.3242@gmail.com',to=[request.user.email]
-                       )
-        EmailThread(message).start()
+class ActivationAPIView(APIView):
+    def get(self, request, *args, **kwargs):
         
-        return Response({"success": "Email sent successfully"}, status=status.HTTP_200_OK)
-    def get_tokens_for_user(self,user):
-        refresh = RefreshToken.for_user(user)
-
-        return str(refresh.access_token)
+        return Response(kwargs['token'])
