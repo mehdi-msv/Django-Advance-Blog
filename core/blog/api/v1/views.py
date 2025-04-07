@@ -1,13 +1,12 @@
-
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
-from .serializers import PostSerializer , CategorySerializer
-from ...models import Post , Category
+from .serializers import PostSerializer, CategorySerializer
+from ...models import Post, Category
 from rest_framework import status
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
-from .permissions import IsOwnerOrReadOnly , IsAdminOrReadOnly
+from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from .paginations import PostsPagination
@@ -133,29 +132,43 @@ class PostDetail(RetrieveUpdateDestroyAPIView):
         return Response({"detail": "Your post has been successfully removed."},status=status.HTTP_204_NO_CONTENT)
 """
 
+
 class PostModelViewSet(ModelViewSet):
-    '''
+    """
     This class-based view provides an API endpoint for listing,
     creating, retrieving, updating, and deleting posts.
-    '''
+    """
+
     queryset = Post.objects.filter(status=True)
     serializer_class = PostSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly,IsOwnerOrReadOnly]
-    filter_backends = [DjangoFilterBackend,filters.SearchFilter,filters.OrderingFilter]
-    filterset_fields = {'author':['exact'],"category": ["in", "exact"], 'status':['exact']}
-    search_fields = ['author__user__email' ,'title', 'content', 'category__name']
-    ordering_fields = ['published_date']
+    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    ]
+    filterset_fields = {
+        "author": ["exact"],
+        "category": ["in", "exact"],
+        "status": ["exact"],
+    }
+    search_fields = ["author__user__email", "title", "content", "category__name"]
+    ordering_fields = ["published_date"]
     pagination_class = PostsPagination
-    @action(detail=False,methods=['get'])
-    def get_ok(self,request):
-        return Response({"detail": "API is working correctly."}, status=status.HTTP_200_OK)
-        
-    
+
+    @action(detail=False, methods=["get"])
+    def get_ok(self, request):
+        return Response(
+            {"detail": "API is working correctly."}, status=status.HTTP_200_OK
+        )
+
+
 class CategoryModelViewSet(ModelViewSet):
-    '''
+    """
     This class-based view provides an API endpoint for listing,
     creating, retrieving, updating, and deleting categories.
-    '''
+    """
+
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [IsAdminOrReadOnly]
