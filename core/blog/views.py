@@ -9,7 +9,10 @@ from django.views.generic import (
     UpdateView,
     DeleteView,
 )
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.mixins import (
+    LoginRequiredMixin,
+    PermissionRequiredMixin,
+)
 from .models import Post
 from accounts.models import Profile, User
 from .forms import ContactForm, PostForm
@@ -81,7 +84,9 @@ class PostDetailView(LoginRequiredMixin, DetailView):
     """
 
     model = Post
-    context_object_name = "post"  # for using post instead of object in template
+    context_object_name = (
+        "post"  # for using post instead of object in template
+    )
 
 
 #   template_name = 'blog/post_detail.html'

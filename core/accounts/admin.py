@@ -6,8 +6,20 @@ from .models import User, Profile
 
 
 class CustomUserAdmin(UserAdmin):
-    list_display = ("email", "is_superuser", "is_staff", "is_active", "is_verified")
-    list_filter = ("email", "is_superuser", "is_staff", "is_active", "is_verified")
+    list_display = (
+        "email",
+        "is_superuser",
+        "is_staff",
+        "is_active",
+        "is_verified",
+    )
+    list_filter = (
+        "email",
+        "is_superuser",
+        "is_staff",
+        "is_active",
+        "is_verified",
+    )
     search_fields = ("email",)
     ordering = ("email",)
 
@@ -15,7 +27,14 @@ class CustomUserAdmin(UserAdmin):
         ("Authentications", {"fields": ("email", "password")}),
         (
             "Permissions",
-            {"fields": ("is_superuser", "is_staff", "is_active", "is_verified")},
+            {
+                "fields": (
+                    "is_superuser",
+                    "is_staff",
+                    "is_active",
+                    "is_verified",
+                )
+            },
         ),
         ("Group Permissions", {"fields": ("groups", "user_permissions")}),
         ("Important Dates", {"fields": ("last_login",)}),
@@ -37,7 +56,12 @@ class CustomUserAdmin(UserAdmin):
             "Permissions",
             {
                 "classes": ("wide",),
-                "fields": ("is_superuser", "is_staff", "is_active", "is_verified"),
+                "fields": (
+                    "is_superuser",
+                    "is_staff",
+                    "is_active",
+                    "is_verified",
+                ),
             },
         ),
     )

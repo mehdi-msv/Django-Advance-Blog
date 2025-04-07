@@ -16,7 +16,9 @@ class Post(models.Model):
 
     author = models.ForeignKey("accounts.Profile", on_delete=models.CASCADE)
     image = models.ImageField(blank=True, null=True)
-    category = models.ForeignKey("Category", on_delete=models.SET_NULL, null=True)
+    category = models.ForeignKey(
+        "Category", on_delete=models.SET_NULL, null=True
+    )
     title = models.CharField(max_length=256)
     content = models.TextField()
     status = models.BooleanField()

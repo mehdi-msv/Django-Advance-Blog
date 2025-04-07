@@ -12,11 +12,19 @@ urlpatterns = [
         name="redirect-to-django",
     ),
     path("posts/", views.PostListView.as_view(), name="post-list"),
-    path("post/<int:pk>/", views.PostDetailView.as_view(), name="post-detail"),
+    path(
+        "post/<int:pk>/", views.PostDetailView.as_view(), name="post-detail"
+    ),
     path("contact/", views.ContactView.as_view(), name="contact-us"),
     path("create/", views.PostCreateView.as_view(), name="post-create"),
-    path("post/<int:pk>/edit/", views.PostEditView.as_view(), name="post-edit"),
-    path("post/<int:pk>/delete/", views.PostDeleteView.as_view(), name="post-delete"),
+    path(
+        "post/<int:pk>/edit/", views.PostEditView.as_view(), name="post-edit"
+    ),
+    path(
+        "post/<int:pk>/delete/",
+        views.PostDeleteView.as_view(),
+        name="post-delete",
+    ),
     path("api/v1/", include("blog.api.v1.urls")),
 ]
 

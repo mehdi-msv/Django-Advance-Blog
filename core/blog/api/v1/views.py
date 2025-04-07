@@ -1,9 +1,15 @@
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import (
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+)
 from rest_framework.response import Response
 from .serializers import PostSerializer, CategorySerializer
 from ...models import Post, Category
 from rest_framework import status
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import (
+    ListCreateAPIView,
+    RetrieveUpdateDestroyAPIView,
+)
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly
@@ -152,7 +158,12 @@ class PostModelViewSet(ModelViewSet):
         "category": ["in", "exact"],
         "status": ["exact"],
     }
-    search_fields = ["author__user__email", "title", "content", "category__name"]
+    search_fields = [
+        "author__user__email",
+        "title",
+        "content",
+        "category__name",
+    ]
     ordering_fields = ["published_date"]
     pagination_class = PostsPagination
 

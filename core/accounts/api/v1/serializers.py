@@ -53,7 +53,9 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if attrs["password"] != attrs["password1"]:
-            raise serializers.ValidationError({"password": "Passwords must match."})
+            raise serializers.ValidationError(
+                {"password": "Passwords must match."}
+            )
         try:
             validate_password(attrs["password"])
         except exceptions.ValidationError as e:
@@ -69,7 +71,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         validated_data = super().validate(attrs)
         if not self.user.is_verified:
-            raise serializers.ValidationError({"detail": "user is not verified."})
+            raise serializers.ValidationError(
+                {"detail": "user is not verified."}
+            )
         validated_data["email"] = self.user.email
         validated_data["user_id"] = self.user.id
         return validated_data
@@ -92,7 +96,9 @@ class ChangePasswordSerializer(serializers.Serializer):
         # Check if new password and old password are the same
         if attrs["old_password"] == attrs["new_password"]:
             raise serializers.ValidationError(
-                {"new_password": "New password cannot be the same as the old password."}
+                {
+                    "new_password": "New password cannot be the same as the old password."
+                }
             )
 
         # Check if passwords match
@@ -105,7 +111,9 @@ class ChangePasswordSerializer(serializers.Serializer):
         try:
             validate_password(attrs["new_password"], user)
         except exceptions.ValidationError as e:
-            raise serializers.ValidationError({"new_password": list(e.messages)})
+            raise serializers.ValidationError(
+                {"new_password": list(e.messages)}
+            )
 
         return attrs
 

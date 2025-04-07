@@ -29,7 +29,9 @@ class RegistrationAPIView(GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
 
         serializer.save()
         email = serializer.validated_data["email"]
@@ -49,7 +51,9 @@ class CustomObtainAuthToken(ObtainAuthToken):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
         token, created = Token.objects.get_or_create(user=user)
-        return Response({"token": token.key, "user_id": user.pk, "email": user.email})
+        return Response(
+            {"token": token.key, "user_id": user.pk, "email": user.email}
+        )
 
 
 class DiscardAuthToken(APIView):
@@ -70,7 +74,9 @@ class ChangePasswordAPIView(GenericAPIView):
 
     def put(self, request, *args, **kwargs):
         user = request.user
-        serializer = self.get_serializer(data=request.data, context={"user": user})
+        serializer = self.get_serializer(
+            data=request.data, context={"user": user}
+        )
 
         if serializer.is_valid():
             # Set new password
@@ -78,7 +84,8 @@ class ChangePasswordAPIView(GenericAPIView):
             user.save()
 
             return Response(
-                {"success": "Password updated successfully"}, status=status.HTTP_200_OK
+                {"success": "Password updated successfully"},
+                status=status.HTTP_200_OK,
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -95,12 +102,17 @@ class ProfileAPIView(RetrieveUpdateAPIView):
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer = self.get_serializer(
+            instance, data=request.data, partial=partial
+        )
 
         if serializer.is_valid():
             serializer.save()
             return Response(
-                {"success": "Profile updated successfully", "data": serializer.data}
+                {
+                    "success": "Profile updated successfully",
+                    "data": serializer.data,
+                }
             )
 
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
@@ -150,7 +162,8 @@ class ActivationResendAPIView(APIView):
         email = request.data.get("email")
         if not email:
             return Response(
-                {"detail": "Email is required."}, status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Email is required."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
         try:
             user = User.objects.get(email=email)
