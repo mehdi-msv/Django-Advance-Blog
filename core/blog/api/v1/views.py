@@ -1,15 +1,10 @@
 from rest_framework.permissions import (
-    IsAuthenticated,
     IsAuthenticatedOrReadOnly,
 )
 from rest_framework.response import Response
 from .serializers import PostSerializer, CategorySerializer
 from ...models import Post, Category
 from rest_framework import status
-from rest_framework.generics import (
-    ListCreateAPIView,
-    RetrieveUpdateDestroyAPIView,
-)
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly
@@ -33,10 +28,10 @@ def postList(request):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
+
         @api_view(["GET", "PUT", "DELETE"])
-        
-        
+
+
 @permission_classes([IsAuthenticatedOrReadOnly])
 def postDetail(request,id):
     # try:
@@ -83,8 +78,8 @@ class PostList(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
-    
+
+
 class PostDetail(APIView):
     '''
     This class-based view provides an API endpoint for retrieving, updating, and deleting posts.

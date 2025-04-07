@@ -1,4 +1,3 @@
-from django.shortcuts import render, redirect
 from django.views.generic import (
     TemplateView,
     RedirectView,
@@ -14,7 +13,7 @@ from django.contrib.auth.mixins import (
     PermissionRequiredMixin,
 )
 from .models import Post
-from accounts.models import Profile, User
+from accounts.models import Profile
 from .forms import ContactForm, PostForm
 
 # Create your views here.
