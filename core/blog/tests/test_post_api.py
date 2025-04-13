@@ -1,10 +1,10 @@
 import pytest
 from django.urls import reverse
-from rest_framework import status
 from rest_framework.test import APIClient
 from datetime import datetime
 
 from accounts.models import User
+from ..models import Post
 
 
 @pytest.fixture
@@ -53,7 +53,7 @@ class TestPostAPI:
 
         url = reverse("blog:api-v1:post-list")
         response = api_client.get(url)
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == 200
 
     def test_create_post_response_201(self, api_client, test_user):
         """
@@ -73,8 +73,11 @@ class TestPostAPI:
             "status": True,
             "published_date": datetime.now()
         }
+        post_count_before = Post.objects.count()
         response = api_client.post(url, data)
-        assert response.status_code == status.HTTP_201_CREATED
+        post_count_after = Post.objects.count()
+        assert post_count_after == post_count_before + 1
+        assert response.status_code == 201
         
     def test_create_post_response_401(self, api_client):
         """
@@ -94,4 +97,22 @@ class TestPostAPI:
             "published_date": datetime.now()
         }
         response = api_client.post(url, data)
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == 401
+        
+    def test_create_post_invalid_data_response_400_status(
+    self, api_client, test_user
+    ):
+        """
+        Test the API endpoint for creating a new post with invalid data.
+
+        This test authenticates a user, sends a POST request to the post list
+        endpoint with invalid post data, and verifies that the response status
+        code is HTTP 400 Bad Request, indicating that the post was not created.
+        """
+        url = reverse("blog:api-v1:post-list")
+        data = {"title": "test", "content": "description"}
+        user = test_user
+
+        api_client.force_authenticate(user=user)
+        response = api_client.post(url, data)
+        assert response.status_code == 400
