@@ -17,9 +17,6 @@ jobs:
     
     - name: Start containers
       run: docker compose up -d
-      
-    - name: Run migrations
-      run: docker compose exec backend python manage.py migrate
-        
+    
     - name: Run tests
       run: docker compose exec backend sh -c "flake8 && pytest ."
