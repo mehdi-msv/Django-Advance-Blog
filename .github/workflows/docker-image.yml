@@ -14,7 +14,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Setup Docker-Compose
-      run: compose up -d
-    - name: Run Tests
-      run: docker exec backend sh -c "flake8 && pytest ."
+    
+    - name: Start containers
+      run: docker compose up -d
+    
+    - name: Run tests
+      run: docker compose exec backend sh -c "flake8 && pytest ."
