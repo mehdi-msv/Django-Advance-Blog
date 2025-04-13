@@ -6,6 +6,8 @@ from datetime import datetime
 
 from accounts.models import User
 from ..models import Post
+
+
 @pytest.fixture
 def api_client():
     
@@ -17,6 +19,7 @@ def api_client():
     """
 
     return APIClient()
+
 
 @pytest.fixture
 def test_user():
@@ -35,6 +38,7 @@ def test_user():
         password="testpassword123",
         is_staff=True
     )
+
 
 @pytest.mark.django_db
 class TestPostAPI:

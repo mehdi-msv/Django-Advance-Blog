@@ -11,3 +11,4 @@ exclude =
     __init__.py,
 ignore =
     E501
+    W293
