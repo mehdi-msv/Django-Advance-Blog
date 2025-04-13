@@ -100,7 +100,7 @@ class TestPostAPI:
         assert response.status_code == 401
         
     def test_create_post_invalid_data_response_400_status(
-    self, api_client, test_user
+        self, api_client, test_user
     ):
         """
         Test the API endpoint for creating a new post with invalid data.
