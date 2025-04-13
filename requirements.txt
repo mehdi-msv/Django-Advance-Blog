@@ -10,7 +10,6 @@ django-filter==24.3
 Markdown==3.7
 drf-yasg[validation]
 djangorestframework_simplejwt
-django-coreapi
 
 # deployment modules
 
