@@ -11,7 +11,6 @@ Markdown==3.7
 drf-yasg[validation]
 djangorestframework_simplejwt
 djoser
-django-coreapi
 
 # deployment modules
 
