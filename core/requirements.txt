@@ -14,7 +14,7 @@ djangorestframework_simplejwt
 
 
 # email third party modules
-django-email-templated
+django-mail-templated
 
 # refactoring and tests
 black
