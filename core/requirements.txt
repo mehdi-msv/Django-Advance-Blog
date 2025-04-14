@@ -12,6 +12,7 @@ drf-yasg[validation]
 djangorestframework_simplejwt
 djoser
 django-coreapi
+django-cors-headers
 
 # deployment modules
 

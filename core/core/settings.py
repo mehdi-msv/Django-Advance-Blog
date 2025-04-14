@@ -47,15 +47,17 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "djoser",
     "mail_templated",
-    "accounts",
-    "blog",
+    "corsheaders",
     "django_filters",
     "drf_yasg",
+    "accounts",
+    "blog",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -182,3 +184,7 @@ SIMPLE_JWT = {
     "ALGORITHM": config("ALGORITHM", default="HS256"),
     "SIGNING_KEY": config("SIGNING_KEY", default=SECRET_KEY),
 }
+
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:5500",
+]

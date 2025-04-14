@@ -11,6 +11,7 @@ Markdown==3.7
 drf-yasg[validation]
 djangorestframework_simplejwt
 django-coreapi
+django-cors-headers
 
 # deployment modules
 
