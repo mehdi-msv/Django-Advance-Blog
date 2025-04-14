@@ -145,5 +145,6 @@ class PostDeleteView(LoginRequiredMixin, DeleteView):
     def get_queryset(self):
         return Post.objects.filter(author__user=self.request.user)
 
+
 class PostListAPIView(TemplateView):
     template_name = 'blog/post_list_api.html'
