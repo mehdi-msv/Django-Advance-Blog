@@ -1,17 +1,18 @@
 from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly,
 )
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 from rest_framework.response import Response
-from .serializers import PostSerializer, CategorySerializer
-from ...models import Post, Category
 from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
-from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters
-from .paginations import PostsPagination
+from rest_framework.permissions import IsAdminUser
 
+from .permissions import IsOwnerOrReadOnly
+from .paginations import PostsPagination
+from .serializers import PostSerializer, CategorySerializer
+from ...models import Post, Category
 
 """
 # from rest_framework.decorators import api_view,permission_classes
@@ -177,4 +178,4 @@ class CategoryModelViewSet(ModelViewSet):
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdminUser]
