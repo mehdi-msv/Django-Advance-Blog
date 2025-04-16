@@ -188,3 +188,7 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5500",
 ]
+
+# Celery configuration
+
+CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://redis:6379/1")
