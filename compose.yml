@@ -23,7 +23,7 @@ services:
 
   celery_worker:
     build: .
-    command: celery -A proj worker -l INFO
+    command: celery -A proj worker --loglevel=info
     depends_on:
       - redis
       - backend
