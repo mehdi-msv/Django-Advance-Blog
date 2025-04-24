@@ -23,10 +23,16 @@ services:
 
   celery_worker:
     build: .
-    command: celery -A proj worker --loglevel=info
+    image: celery_worker
+    command: celery -A core worker -l INFO
     depends_on:
       - redis
       - backend
+    volumes:
+      - ./core:/app
+    environment:
+      - SECRET_KEY='django-insecure-)!w7$7wxdo*5@db%t#s2914wn(-ucf!)945v%p+$uobt@_k_%j'
+      - DEBUG=True
 
   smtp4dev:
     image: rnwood/smtp4dev:v3

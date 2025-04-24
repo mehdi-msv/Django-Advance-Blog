@@ -37,7 +37,7 @@ urlpatterns = [
     ),
     path("profile/", views.ProfileAPIView.as_view(), name="profile"),
     path(
-        "activation/confirm/<str:token>",
+        "activation/confirm/<str:token>/",
         views.ActivationAPIView.as_view(),
         name="activation",
     ),

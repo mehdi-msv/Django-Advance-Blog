@@ -11,7 +11,11 @@ urlpatterns = [
         name="redirect-to-django",
     ),
     path("post/", views.PostListView.as_view(), name="post-list"),
-    path("post/list/api/", views.PostListAPIView.as_view(), name="post-list-api"),
+    path(
+        "post/list/api/",
+        views.PostListAPIView.as_view(),
+        name="post-list-api",
+    ),
     path(
         "post/<int:pk>/", views.PostDetailView.as_view(), name="post-detail"
     ),

@@ -1,23 +1,25 @@
 from rest_framework.generics import GenericAPIView, RetrieveUpdateAPIView
-from .serializers import (
-    RegistrationSerializer,
-    CustomAuthTokenSerializer,
-    ChangePasswordSerializer,
-    ProfileSerializer,
-)
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from ...models import Profile
+from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.exceptions import TokenError
 from django.shortcuts import get_object_or_404
-from .permissions import IsVerified
-from ..utils import EmailVerificationThread
 from django.contrib.auth import get_user_model
-import jwt
-from core.settings import SIMPLE_JWT
+
+# from ..utils import EmailVerificationThread
+from ...models import Profile
+from .permissions import IsVerified
+from .serializers import (
+    RegistrationSerializer,
+    CustomAuthTokenSerializer,
+    ChangePasswordSerializer,
+    ProfileSerializer,
+)
+from ...tasks import send_verification_email
 
 
 User = get_user_model()
@@ -36,7 +38,7 @@ class RegistrationAPIView(GenericAPIView):
         serializer.save()
         email = serializer.validated_data["email"]
         user = User.objects.get(email=email)
-        EmailVerificationThread(user).start()
+        send_verification_email.delay(user.id)
         return Response({"email": email}, status=status.HTTP_201_CREATED)
 
 
@@ -121,28 +123,22 @@ class ProfileAPIView(RetrieveUpdateAPIView):
 class ActivationAPIView(APIView):
     def get(self, request, *args, **kwargs):
         token = kwargs["token"]
+
         try:
-            token_decoded = jwt.decode(
-                token,
-                SIMPLE_JWT["SIGNING_KEY"],
-                algorithms=[SIMPLE_JWT["ALGORITHM"]],
-            )
-            user = User.objects.get(id=token_decoded["user_id"])
-        except jwt.exceptions.InvalidSignatureError:
+            access_token = AccessToken(token)
+            user_id = access_token["user_id"]
+            user = User.objects.get(id=user_id)
+        except TokenError as e:
             return Response(
-                {"detail": "Invalid activation token."},
+                {"detail": str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        except jwt.exceptions.InvalidSignatureError:
+        except User.DoesNotExist:
             return Response(
-                {"detail": "Invalid activation token."},
+                {"detail": "User does not exist."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        except jwt.exceptions.ExpiredSignatureError:
-            return Response(
-                {"detail": "Activation token has expired."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+
         if not user.is_verified:
             user.is_verified = True
             user.save()
@@ -172,14 +168,12 @@ class ActivationResendAPIView(APIView):
                 {"detail": "User with this email does not exist."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
         if user.is_verified:
             return Response(
                 {"detail": "Your account is already verified."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        EmailVerificationThread(user).start()
+        send_verification_email.delay(user.id)
         return Response(
             {"detail": "Verification email sent."}, status=status.HTTP_200_OK
         )

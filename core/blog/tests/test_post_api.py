@@ -9,7 +9,6 @@ from ..models import Post
 
 @pytest.fixture
 def api_client():
-    
     """
     A fixture that provides an instance of APIClient for making API requests.
 
@@ -36,7 +35,7 @@ def test_user():
         email="test@example.com",
         password="testpassword123",
         is_staff=True,
-        is_verified=True
+        is_verified=True,
     )
 
 
@@ -71,14 +70,14 @@ class TestPostAPI:
             "title": "Test Post",
             "content": "Description",
             "status": True,
-            "published_date": datetime.now()
+            "published_date": datetime.now(),
         }
         post_count_before = Post.objects.count()
         response = api_client.post(url, data)
         post_count_after = Post.objects.count()
         assert post_count_after == post_count_before + 1
         assert response.status_code == 201
-        
+
     def test_create_post_response_401(self, api_client):
         """
         Test that an unauthorized user can't create a post.
@@ -88,17 +87,17 @@ class TestPostAPI:
         expected to be HTTP 401 Unauthorized, indicating that the user is not
         authenticated and cannot create a post.
         """
-        
+
         url = reverse("blog:api-v1:post-list")
         data = {
             "title": "Test Post",
             "content": "Description",
             "status": True,
-            "published_date": datetime.now()
+            "published_date": datetime.now(),
         }
         response = api_client.post(url, data)
         assert response.status_code == 401
-        
+
     def test_create_post_invalid_data_response_400_status(
         self, api_client, test_user
     ):

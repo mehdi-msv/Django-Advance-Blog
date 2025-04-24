@@ -66,4 +66,6 @@ class Command(BaseCommand):
                 status=random.choice([True, False]),
                 published_date=datetime.now(),
             )
-        self.stdout.write(self.style.SUCCESS("✅ Fake data inserted successfully!"))
+        self.stdout.write(
+            self.style.SUCCESS("✅ Fake data inserted successfully!")
+        )
