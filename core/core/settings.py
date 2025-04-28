@@ -47,15 +47,17 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "djoser",
     "mail_templated",
-    "accounts",
-    "blog",
+    "corsheaders",
     "django_filters",
     "drf_yasg",
+    "accounts",
+    "blog",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -181,4 +183,26 @@ SIMPLE_JWT = {
     "TOKEN_OBTAIN_SERIALIZER": "accounts.api.v1.serializers.CustomTokenObtainPairSerializer",
     "ALGORITHM": config("ALGORITHM", default="HS256"),
     "SIGNING_KEY": config("SIGNING_KEY", default=SECRET_KEY),
+}
+
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:5500",
+]
+
+# Celery configuration
+
+CELERY_BROKER_URL = config(
+    "CELERY_BROKER_URL", default="redis://redis:6379/1"
+)
+
+# Caching configuration
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://redis:6379/2",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
 }
