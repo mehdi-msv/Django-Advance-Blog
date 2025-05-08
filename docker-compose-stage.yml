@@ -13,8 +13,10 @@ services:
     command: sh -c "python manage.py prepare_app && gunicorn core.wsgi:application --bind 0.0.0.0:8000"
     volumes:
       - ./core:/app
-    ports:
-      - "8000:8000"
+      - static_volume:/app/static
+      - media_volume:/app/media
+    expose:
+      - "8000"
     environment:
       - SECRET_KEY=django-insecure-)!w7$7wxdo*5@db%t#s2914wn(-ucf!)945v%p+$uobt@_k_%j
       - DEBUG=False
@@ -37,6 +39,8 @@ services:
       - backend
     volumes:
       - ./core:/app
+      - static_volume:/app/static
+      - media_volume:/app/media
     environment:
       - SECRET_KEY=django-insecure-)!w7$7wxdo*5@db%t#s2914wn(-ucf!)945v%p+$uobt@_k_%j
       - DEBUG=False
@@ -47,5 +51,21 @@ services:
       - ALGORITHM=HS256
       - SIGNING_KEY=django-insecure-)!w7$7wxdo*5@db%t#s2914wn(-ucf!)945v%p+$uobt@_k_%j
       - CELERY_BROKER_URL=redis://redis:6379/1
+    
+  nginx:
+    image: nginx:latest
+    container_name: django_blog_nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+      - static_volume:/home/app/static
+      - media_volume:/home/app/media
+    depends_on:
+      - backend
+      - redis
 
-volumes: {}
+volumes:
+  static_volume:
+  media_volume:
