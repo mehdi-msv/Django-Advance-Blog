@@ -203,6 +203,6 @@ CACHES = {
         "LOCATION": "redis://redis:6379/2",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
+        },
     }
 }

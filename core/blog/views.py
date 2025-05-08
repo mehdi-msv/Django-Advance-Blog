@@ -14,7 +14,6 @@ from django.contrib.auth.mixins import (
 )
 import requests
 from django.http import JsonResponse
-from django.core.cache import cache
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
 from .models import Post
@@ -154,7 +153,8 @@ class PostDeleteView(LoginRequiredMixin, DeleteView):
 class PostListAPIView(TemplateView):
     template_name = "blog/post_list_api.html"
 
-@method_decorator(cache_page(60), name='dispatch')
+
+@method_decorator(cache_page(60), name="dispatch")
 class TestPostManMockServer(TemplateView):
     # @cache_page(60) using this decorator for cashing function
     def get(self, *args, **kwargs):
@@ -162,5 +162,7 @@ class TestPostManMockServer(TemplateView):
         #     response = requests.get('https://76f604ab-308c-4c9a-a5fc-bfd3d02ed434.mock.pstmn.io/test/delay/5/')
         #     cache.set("post-man-server", response.json(), 60)
         # return JsonResponse(cache.get("post-man-server"))
-        response = requests.get('https://76f604ab-308c-4c9a-a5fc-bfd3d02ed434.mock.pstmn.io/test/delay/5/')
+        response = requests.get(
+            "https://76f604ab-308c-4c9a-a5fc-bfd3d02ed434.mock.pstmn.io/test/delay/5/"
+        )
         return JsonResponse(response.json())
