@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "django_filters",
     "drf_yasg",
+    "django_celery_beat",
     "accounts",
     "blog",
 ]

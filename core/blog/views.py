@@ -1,84 +1,33 @@
 from django.views.generic import (
-    TemplateView,
-    RedirectView,
     ListView,
     DetailView,
-    FormView,
     CreateView,
     UpdateView,
     DeleteView,
 )
 from django.contrib.auth.mixins import (
     LoginRequiredMixin,
-    PermissionRequiredMixin,
 )
-import requests
-from django.http import JsonResponse
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
-from .models import Post
+from django.utils import timezone
+from django.shortcuts import get_object_or_404
+from django.urls import reverse
+from .models import Post, Comment
 from accounts.models import Profile
-from .forms import ContactForm, PostForm
+from .forms import PostForm, CommentForm
 
 # Create your views here.
 
-# Function-based view to show index page
-'''
-def fbv_index(request):
-    """
-    This is a function-based view to show index page
-    """
-    context = {'name':'mehdi'}
-    return render(request, 'index.html',context)
-'''
-# Redirecting to Django's official website with Function-based view
-"""
-def redirect_to_django(request, *args, **kwargs):
-    post = Post.objects.get(pk=kwargs['pk'])
-    print(post)
-    return redirect('https://www.djangoproject.com')
-"""
-
-
-class IndexView(TemplateView):
-    """
-    This is a class-based view to show index page
-    """
-
-    template_name = "index.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["name"] = "mehdi"
-        context["posts"] = Post.objects.all()
-        return context
-
-
-class RedirectToDjango(RedirectView):
-    """ """
-
-    url = "https://www.djangoproject.com/"
-
-    def get_redirect_url(self, *args, **kwargs):
-        post = Post.objects.get(pk=kwargs["pk"])
-        print(post)
-        return super().get_redirect_url(*args, **kwargs)
-
-
-class PostListView(PermissionRequiredMixin, ListView):
+@method_decorator(cache_page(60 * 5), name="dispatch")
+class PostListView(ListView):
     """
     This is a class-based view to show list of posts.
     """
-
-    permission_required = "blog.view_post"
-    #    model = Post
-    queryset = Post.objects.filter(status=True)
+    queryset = Post.objects.filter(status=True, published_date__lte=timezone.now())
     context_object_name = "posts"
     ordering = "-published_date"
-    paginate_by = 2
-    # def get_queryset(self):
-    #     posts = Post.objects.filter(status=True)
-    #     return posts
+    paginate_by = 6
 
 
 class PostDetailView(LoginRequiredMixin, DetailView):
@@ -86,26 +35,46 @@ class PostDetailView(LoginRequiredMixin, DetailView):
     This is a class-based view to show detail page of a post.
     """
 
-    model = Post
+    queryset = Post.objects.filter(status=True, published_date__lte=timezone.now())
     context_object_name = (
         "post"  # for using post instead of object in template
     )
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        post = self.object
+        context["comments"] = Comment.objects.filter(
+            post=post,
+            parent__isnull=True,
+            is_hidden=False,
+            is_approved=True
+        ).prefetch_related("replies")
 
-#   template_name = 'blog/post_detail.html'
-class ContactView(FormView):
+        context["form"] = CommentForm(initial={"post": post})
+        return context
+
+class CommentCreateView(LoginRequiredMixin, CreateView):
     """
-    This is a class-based view to show contact form.
+    This is a class-based view to create a new comment.
     """
 
-    template_name = "blog/contact_us.html"
-    form_class = ContactForm
-    success_url = "/blog/posts/"
+    model = Comment
+    form_class = CommentForm
 
     def form_valid(self, form):
-        # This method is called when valid form data has been POSTed.
-        # It should return an HttpResponse.
-        return super(ContactView, self).form_valid(form)
+        form.instance.author = self.request.user.profile
+
+        parent_id = self.request.POST.get("parent")
+
+        form.instance.post = get_object_or_404(Post, slug=self.kwargs['post_slug'])
+
+        if parent_id:
+            form.instance.parent = get_object_or_404(Comment, id=parent_id)
+
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse("blog:post-detail", kwargs={"slug": self.object.post.slug})
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
@@ -114,7 +83,6 @@ class PostCreateView(LoginRequiredMixin, CreateView):
     """
 
     model = Post
-    #   fields = ['title', 'content', 'category', 'status', 'published_date'] ##can use it instead of form_class
     form_class = PostForm
     success_url = "/blog/posts/"
 
@@ -148,21 +116,3 @@ class PostDeleteView(LoginRequiredMixin, DeleteView):
 
     def get_queryset(self):
         return Post.objects.filter(author__user=self.request.user)
-
-
-class PostListAPIView(TemplateView):
-    template_name = "blog/post_list_api.html"
-
-
-@method_decorator(cache_page(60), name="dispatch")
-class TestPostManMockServer(TemplateView):
-    # @cache_page(60) using this decorator for cashing function
-    def get(self, *args, **kwargs):
-        # if not cache.get("post-man-server"):
-        #     response = requests.get('https://76f604ab-308c-4c9a-a5fc-bfd3d02ed434.mock.pstmn.io/test/delay/5/')
-        #     cache.set("post-man-server", response.json(), 60)
-        # return JsonResponse(cache.get("post-man-server"))
-        response = requests.get(
-            "https://76f604ab-308c-4c9a-a5fc-bfd3d02ed434.mock.pstmn.io/test/delay/5/"
-        )
-        return JsonResponse(response.json())

@@ -3,6 +3,7 @@ from django.core.management import call_command
 from django.db.migrations.executor import MigrationExecutor
 from django.db import connections
 from django.db.utils import OperationalError
+from accounts.scheduler import setup_periodic_tasks
 
 
 class Command(BaseCommand):
@@ -28,6 +29,10 @@ class Command(BaseCommand):
         # Collect static files
         self.stdout.write("Collecting static files...")
         call_command("collectstatic", "--noinput")
+
+        self.stdout.write("Setting up periodic tasks...")
+        setup_periodic_tasks()
+        self.stdout.write(self.style.SUCCESS("Periodic tasks set successfully."))
 
         self.stdout.write(
             self.style.SUCCESS("All preparation steps completed successfully.")

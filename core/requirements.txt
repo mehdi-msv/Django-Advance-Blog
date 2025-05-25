@@ -31,3 +31,4 @@ faker
 celery
 redis
 django-redis
+django-celery-beat
