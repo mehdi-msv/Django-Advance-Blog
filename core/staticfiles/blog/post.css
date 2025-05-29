@@ -1,0 +1,192 @@
+
+    body {
+      font-family: sans-serif;
+      background: snow;
+      padding: 20px;
+      direction: rtl;
+    }
+    .post-container {
+        position: absolute;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 20px;
+      /* max-width: 500px; */
+      width: 330px;
+      height: auto;
+      margin: auto;
+      left: 150px;
+    }
+    .post-container img {
+      width: 100%;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+    .post-container h2 {
+      margin: 10px 0;
+      color: #111;
+    }
+    .post-container .price {
+      color: green;
+      font-weight: bold;
+    }
+    .comments {
+      margin-top: 30px;
+      width: 40%;
+      margin-right: 20px;
+    }
+    .comment, .reply {
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 8px;
+      margin: 10px 0;
+      width: 90%;
+    }
+    .comment p{
+      font-weight: 1;
+    }
+    .comments h3{
+        font-size: 21px;
+        font-weight: 1;
+    }
+    .comments h4{
+        font-weight: 1;
+    }
+    .reply {
+      margin-right: 20px;
+      background: #f9f9f9;
+      width: 90%;
+      word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    .reply-comment{
+      display: flex;
+      justify-content: space-between;
+      padding: 0px 10px;
+      /* width: 60%; */
+    }
+    .reply-btn {
+      cursor: pointer;
+      color: #007bff;
+      font-size: 15px;
+    }
+    .no-replies{
+      color: #32610a;
+      text-align: center;
+      margin-left: 35px;
+    }
+    textarea {
+      width: 90%;
+      margin: 5px 0;
+      border-radius: 5px;
+      height: 30px;
+      align-content: center;
+      resize: none;
+      padding: 5px;
+      
+    }
+    textarea:focus{
+        outline: none;
+    }
+    .btn1 {
+      font-size: 16px;
+      font-weight: 1;
+      background: #007bff;
+      color: snow;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 5px;
+    }
+    .btn2{
+      font-size: 15px;
+      font-weight: 1;
+      background: #007bff;
+      color: snow;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 5px;
+    }
+    .button-card{
+        margin-top: 20px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .price {
+        color: green;
+        font-weight: bold;
+      }
+      .btn {
+        /* margin-top: 5px; */
+        color: #007bff;
+        font-size: 17px;
+        border: none;
+        border-radius: 5px;
+        align-self: center;
+        float: left;
+      }
+
+    .about{
+        color: #111;
+        margin-top: -15px;
+    }
+    .about h4{
+        font-size: 18px;
+        font-weight:1;
+    }
+    .about p{
+        font-weight: 1;
+        line-height: 1.5;
+        text-align: justify;
+        padding-right: 8px;
+        margin-top: -10px;
+    }
+    .section{
+        position: relative;
+        display: flex;
+        justify-content: flex-end;
+        flex-direction: row-reverse;
+    }
+    .comments p{
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    .reply-comment .report{
+      color: rgb(153, 101, 4);
+    }
+    .reply-comment > :nth-child(2) {
+      margin-left: 150px;
+    }
+    .reply-comment > :nth-child(3) {
+      margin-left: 10px;
+    }
+    .comment-header {
+      background-color: #f1f1f1;
+      padding: 4px 8px;
+      border-radius: 5px;
+      font-size: 14px;
+      margin-bottom: 5px;
+      color: #333;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .reply-input {
+      margin-top: 10px;
+    }
+
+    .reply-input textarea {
+      width: 100%;
+      height: 40px;
+      resize: none;
+    }
+    .hidden {
+      display: none !important;
+    }

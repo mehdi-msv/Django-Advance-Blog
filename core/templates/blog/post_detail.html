@@ -1,22 +1,90 @@
+{% load static %}
 <!DOCTYPE html>
-<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
-<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
-<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
-<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
-<html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title></title>
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="">
-    </head>
-    <body>
-        <h1>{{post.title}}</h1>
-        <hr></hr>
-        <small>{{post.author}}-{{post.category}}-{{post.published_date}}</small>
-        <p>{{post.content}}</p>
-        <script src="" async defer></script>
-    </body>
+<html lang="fa">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="{% static 'blog/post.css' %}" />
+    <title>{{ post.titel }}</title>
+  </head>
+  <body>
+    {% include "messages/messages.html" %}
+    <div class="section">
+      <div class="post-container" id="postDetails">
+        <img src="{{ post.image.url }}" alt="{{ post.titel }}" />
+        <h2>{{ post.titel }}</h2>
+        <div class="button-card">
+          <p class="btn">
+            نویسنده :{% if post.author.first_name and post.author.last_name %}
+              {{ post.author.first_name }} {{ post.author.last_name }}
+            {% else %}
+              {{ post.author.username }}
+            {% endif %}
+          </p>
+        </div>
+        <div class="about">
+          <h4>درباره محصول :</h4>
+          <p>{{ post.content }}</p>
+        </div>
+      </div>
+
+      <div class="comments">
+        <h3>کامنت‌ها</h3>
+        <div id="commentsSection">
+          {% for comment in comments %}
+            <div class="comment">
+              <div class="comment-header">
+                <span class="comment-author">نویسنده: {{ comment.author.username }}</span>
+              </div>
+              <p>{{ comment.text }}</p>
+
+              <div class="reply-comment">
+                <span class="reply-btn" onclick="toggleReplyInput(this)">پاسخ</span>
+                <span class="reply-btn" onclick="toggleReplies(this)">مشاهده پاسخ‌ ها</span>
+                <a href="{% url 'blog:report-comment' comment.pk %}" class="reply-btn report">گزارش</a>
+              </div>
+
+              <div class="reply-input hidden">
+                <form method="POST" action="{% url 'blog:post-comment' post.slug %}">
+                  {% csrf_token %}
+                  {{ form.text }}
+                  <input type="hidden" name="post" value="{{ post.id }}" />
+                  <input type="hidden" name="parent" value="{{ comment.id }}" />
+                  <button type="submit" class="btn2">ارسال پاسخ</button>
+                </form>
+              </div>
+
+              <div class="replies-container hidden">
+                {% for reply in comment.replies.all %}
+                  {% if reply.is_approved and not reply.is_hidden %}
+                    <div class="reply">{{ reply.text }}</div>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        <h4>اضافه کردن کامنت جدید:</h4>
+        <form method="post" action="{% url 'blog:post-comment' slug=post.slug %}">
+          {% csrf_token %}
+          {{ form.text }}
+          {{ form.post }}
+          <button type="submit" class="btn1">ارسال</button>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      function toggleReplies(button) {
+        const container = button.closest('.comment').querySelector('.replies-container')
+        container.classList.toggle('hidden')
+      }
+      
+      function toggleReplyInput(button) {
+        const inputBox = button.closest('.comment').querySelector('.reply-input')
+        inputBox.classList.toggle('hidden')
+      }
+    </script>
+  </body>
 </html>

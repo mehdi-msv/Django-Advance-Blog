@@ -1,0 +1,54 @@
+body {
+    font-family: Tahoma, sans-serif;
+    background-color: snow;
+    direction: rtl;
+  }
+  .signup-form {
+    background-color: #fff;
+    padding: 20px;
+    margin: 50px auto;
+    width: 300px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  .signup-form h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #222;
+  }
+  .signup-form input[type="text"],
+  .signup-form input[type="email"],
+  .signup-form input[type="password"] {
+    width: 95%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  a{
+    text-decoration: none;
+    color: #222;
+  }
+  .btn {
+    width: 100%;
+    background-color: #237fe9;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .btn:hover {
+    background-color: #237fa1;
+  }
+  .backTo-signIN{
+    float: left;
+    text-decoration:underline;
+  }
+  .backTo-signIN:hover{
+    color: #237fe9;
+  }
+  input:focus{
+    outline: none;
+    border: none;
+  }

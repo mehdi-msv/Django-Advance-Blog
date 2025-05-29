@@ -9,7 +9,7 @@ class Profile(models.Model):
     Custom Profile Model for Accounts app
     """
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     first_name = models.CharField(max_length=256)
     last_name = models.CharField(max_length=256)
     image = models.ImageField(blank=True, null=True)
@@ -20,9 +20,6 @@ class Profile(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return self.user.email
-    
     def can_post_directly(self):
         return self.score >= 20
     
@@ -30,6 +27,9 @@ class Profile(models.Model):
         self.score = max(0, self.score - amount)
         self.last_score_update = timezone.now()
         self.save()
+    
+    def __str__(self):
+        return self.user.email
 
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):

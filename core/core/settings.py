@@ -147,6 +147,7 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # User manager config
+
 AUTH_USER_MODEL = "accounts.User"
 
 # Mail configuration
@@ -167,8 +168,6 @@ EMAIL_USE_TLS = config("EMAIL_USE_TLS", cast=bool, default=False)
 # Rest frame work settings
 
 REST_FRAMEWORK = {
-    #   'DEFAULT_SCHEMA_CLASS':
-    #       'rest_framework.schemas.coreapi.AutoSchema',
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.BasicAuthentication",
         "rest_framework.authentication.SessionAuthentication",
@@ -194,6 +193,13 @@ CORS_ALLOWED_ORIGINS = [
 
 CELERY_BROKER_URL = config(
     "CELERY_BROKER_URL", default="redis://redis:6379/1"
+)
+
+# Celery beat configuration
+
+CELERY_BEAT_SCHEDULER = config(
+    "CELERY_BEAT_SCHEDULER",
+    default="django_celery_beat.schedulers.DatabaseScheduler",
 )
 
 # Caching configuration

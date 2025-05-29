@@ -1,0 +1,140 @@
+body {
+    font-family: sans-serif;
+    direction: ltr;
+    background-color: #f9f9f9;
+  }
+  
+  .profile-container {
+    max-width: 400px;
+    margin: 100px auto;
+    background: #fff;
+    padding: 20px 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px #ddd;
+  }
+  
+  .profile-container h2 {
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: 1;
+  }
+  
+  .profile-info {
+    margin-bottom: 15px;
+    font-weight: 1;
+    display: flex;
+    align-items: center;
+  }
+  
+  .profile-info label {
+    font-weight: bold;
+  }
+  
+  .profile-info span {
+    margin-right: 10px;
+  }
+  .profile-info i{
+    color: #ad870a;
+  }
+  .verify-badge {
+    font-size: 0.9em;
+    cursor: pointer;
+    padding: 3px 6px;
+    border-radius: 5px;
+    margin-right: 10px;
+  }
+  
+  .not-verified {
+    background-color: #f44336;
+    color: snow;
+  }
+  
+  .verified {
+    background-color: #4caf50;
+    color: snow;
+    width: max-content;
+    cursor: text;
+  }
+  
+  #changePasswordBtn {
+    display: block;
+    width: max-content;
+    padding: 8px 5px;
+    background: #007bff;
+    color: snow;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 15px;
+  }
+  
+  .user-posts {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    margin: 0 auto;
+    margin-top: 17px;
+  }
+  
+  .user-posts li {
+    background: #4498f1;
+    margin: 5px 0;
+    padding: 5px 10px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .user-posts li a{
+    color: snow;
+  }
+  .posts h3{
+    font-weight: 1;
+  }
+  a{
+    text-decoration: none;
+  }
+  .addPost-btn{
+    background-color: #4498f1;
+    outline: none;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 6px;
+    cursor: pointer;
+    font-size: 17px;
+    color: snow;
+  }
+  .icons{
+    display: flex;
+    flex-direction: row;  
+    gap: 13px;
+    color: #111;
+    justify-content: flex-end;
+    align-items: center;
+  }
+  .icons i{
+    cursor: pointer;
+    font-size: 17px;
+  }
+  .verifyEmail{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .profilePhoto{
+    margin:-25% auto 20px;
+    box-shadow: 10px 10px 10px #111;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    overflow: hidden; 
+    position: relative;
+  }
+  .profilePhoto img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover; 
+    border-radius: 50%;
+    display: block;
+  }

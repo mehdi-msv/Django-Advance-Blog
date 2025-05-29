@@ -1,57 +1,70 @@
+{% load static %}
 <!DOCTYPE html>
-<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
-<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
-<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
-<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
-<html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>posts</title>
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="">
-    </head>
-    <body>
-        <h1>blog posts</h1>
-        <ol>
-            {% for post in posts%}
-                <li>
-                    <a href="{% url 'blog:post-detail' pk=post.id %}"><h2>{{post.title}}</h2></a>
-                    <a href="{% url 'blog:post-edit' pk=post.id %}">
-                        <h5>EDIT</h5>
-                    </a>
-                    <a href="{% url 'blog:post-delete' pk=post.id %}">
-                        <h5>DELETE</h5>
-                    </a>
-                    <p>
-                    {{post.content}}
-                    </p>
-                    <small>{{post.author.first_name}} {{post.author.last_name}} - {{post.category}} - {{post.published_date}}</small>
-                </li>
-            {% endfor %}
-        </ol>
-        <div class="pagination">
-            <span class="step-links">
-                {% if page_obj.has_previous %}
-                    <a href="?page=1">&laquo; first</a>
-                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
-                {% endif %}
-        
-                <span class="current">
-                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-                </span>
-        
-                {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}">next</a>
-                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
-                {% endif %}
-            </span>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="{% static 'blog/HomPage.css' %}" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div class="">
+      <div class="navBar">
+        <div class="profile">
+          <a href="/profile/profile.html"><i class="bi bi-person-circle"></i></a>
         </div>
-        <!--[if lt IE 7]>
-            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
-        <![endif]-->
-        
-        <script src="" async defer></script>
-    </body>
+        <div class="searchBar">
+          <input type="text" placeholder="دنبال چی میگردی؟" />
+          <i class="bi bi-search-heart"></i>
+        </div>
+        <select id="nameFilter" class="nameFilter">
+          <option value="">همه</option>
+          <option value="asus">Asus</option>
+          <option value="dell">Dell</option>
+          <option value="hp">HP</option>
+        </select>
+      </div>
+      <div class="cards">
+        <h4>پست ها</h4>
+        <ul id="laptopList">
+          {% for post in posts %}
+            <li>
+              <img src="{{ post.image.url }}" alt="{{ post.title }}" onerror="this.src='/img/placeholder.jpg'" />
+              <h3>{{ post.title }}</h3>
+              <div class="button-card">
+                <p class="btn">{{ post.author }}</p>
+              </div>
+              <p class="text">{{ post.content|truncatewords:15 }}</p>
+              <a class="buy-btn" href="{% url 'blog:post-detail' post.slug %}">مشاهده پست</a>
+            </li>
+          {% endfor %}
+        </ul>
+        <div class="Pagination">
+          {% if is_paginated %}
+            {% if page_obj.has_previous %}
+              <a href="?page={{ page_obj.previous_page_number }}">&lt;</a>
+            {% else %}
+              <span class="disabled">&lt;</span>
+            {% endif %}
+
+            {% for num in paginator.page_range %}
+              {% if page_obj.number == num %}
+                <p class="current">{{ num }}</p>
+              {% else %}
+                <a href="?page={{ num }}">{{ num }}</a>
+              {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+              <a href="?page={{ page_obj.next_page_number }}">&gt;</a>
+            {% else %}
+              <span class="disabled">&gt;</span>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </body>
 </html>

@@ -18,7 +18,7 @@ def setup_periodic_tasks():
 
     # Create or update a periodic task for adding score to active users monthly
     PeriodicTask.objects.update_or_create(
-        name="Daily Add Score to Active Users",
+        name="Monthly Add Score to Active Users",
         defaults={
             "crontab": schedule,
             "task": "accounts.tasks.monthly_add_score",

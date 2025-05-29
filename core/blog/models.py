@@ -1,10 +1,14 @@
 from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
-
+import re
+from decouple import config
 
 # Create your models here.
+def get_bad_words():
+    return config("BAD_WORDS", default="").split(",")
 
+URL_PATTERN = re.compile(r'(https?://\S+|www\.\S+)', re.IGNORECASE)
 
 class Post(models.Model):
     """
@@ -36,25 +40,25 @@ class Post(models.Model):
             self.slug = slug
         super().save(*args, **kwargs)
 
-    def __str__(self):
-        return self.title
-
     def get_snippet(self):
         return self.content[0:5]
 
     def get_absolute_api_url(self):
         return reverse("blog:api-v1:post-detail", kwargs={"pk": self.pk})
+    
+    def __str__(self):
+        return self.title
 
 
 class Category(models.Model):
 
     name = models.CharField(max_length=100)
 
-    def __str__(self):
-        return self.name
-
     def get_absolute_api_url(self):
         return reverse("blog:api-v1:category-detail", kwargs={"pk": self.pk})
+    
+    def __str__(self):
+        return self.name
 
 
 class Comment(models.Model):
@@ -69,5 +73,34 @@ class Comment(models.Model):
     report_count = models.PositiveIntegerField(default=0)
     is_flagged_by_system = models.BooleanField(default=False)
     
+    def flag_if_inappropriate(self):
+        inappropriate_keywords = get_bad_words()
+        text_lower = self.text.lower()
+        if any(
+            keyword in text_lower for keyword in inappropriate_keywords or
+            URL_PATTERN.search(text_lower)
+            ):
+            self.is_flagged_by_system = True
+            self.is_hidden = True
+            
+    def report(self):
+        self.report_count += 1
+        self.author.decrease_score(5)
+        if self.report_count >= 5:
+            self.is_hidden = True
+        self.save()
+
     def __str__(self):
         return f"{self.author} - {self.text[:10]}"
+
+
+class CommentReport(models.Model):
+    user = models.ForeignKey("accounts.Profile", on_delete=models.CASCADE)
+    comment = models.ForeignKey("Comment", on_delete=models.CASCADE)
+    reported_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "comment")
+
+    def __str__(self):
+        return f"{self.user} -> {self.comment}"
