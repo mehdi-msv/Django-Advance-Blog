@@ -10,10 +10,11 @@
     <title>Document</title>
   </head>
   <body>
+    {% include 'messages/messages.html' %}
     <div class="">
       <div class="navBar">
         <div class="profile">
-          <a href="/profile/profile.html"><i class="bi bi-person-circle"></i></a>
+          <a href="{% url 'accounts:profile' %}"><i class="bi bi-person-circle"></i></a>
         </div>
         <div class="searchBar">
           <input type="text" placeholder="دنبال چی میگردی؟" />

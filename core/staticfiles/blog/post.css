@@ -190,3 +190,23 @@
     .hidden {
       display: none !important;
     }
+    .back-to-posts-card {
+      margin: 2rem auto;
+      text-align: center;
+      background-color: #f8f9fa;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+    }
+
+    .back-to-posts-card .back-link {
+      font-size: 1.2rem;
+      text-decoration: none;
+      color: #007bff;
+      font-weight: bold;
+    }
+
+    .back-to-posts-card .back-link:hover {
+      text-decoration: underline;
+    }

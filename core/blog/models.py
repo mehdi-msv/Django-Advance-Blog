@@ -15,8 +15,8 @@ class Post(models.Model):
     This is a class to define posts for blog app
     """
 
-    author = models.ForeignKey("accounts.Profile", on_delete=models.CASCADE)
-    image = models.ImageField(blank=True, null=True)
+    author = models.ForeignKey("accounts.Profile", on_delete=models.CASCADE, related_name="posts")
+    image = models.ImageField(upload_to='post_images/', blank=True, null=True)
     category = models.ForeignKey(
         "Category", on_delete=models.SET_NULL, null=True
     )

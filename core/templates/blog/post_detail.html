@@ -5,14 +5,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="{% static 'blog/post.css' %}" />
-    <title>{{ post.titel }}</title>
+    <title>{{ post.title }}</title>
   </head>
   <body>
-    {% include "messages/messages.html" %}
+    {% include 'messages/messages.html' %}
+    <div class="back-to-posts-card">
+      <a href="{% url 'blog:post-list' %}" class="back-link">بازگشت به پست‌ها</a>
+    </div>
     <div class="section">
       <div class="post-container" id="postDetails">
-        <img src="{{ post.image.url }}" alt="{{ post.titel }}" />
-        <h2>{{ post.titel }}</h2>
+        <img src="{{ post.image.url }}" alt="{{ post.title }}" />
+        <h2>{{ post.title }}</h2>
         <div class="button-card">
           <p class="btn">
             نویسنده :{% if post.author.first_name and post.author.last_name %}
