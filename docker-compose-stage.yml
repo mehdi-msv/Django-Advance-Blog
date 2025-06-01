@@ -13,7 +13,7 @@ services:
     command: sh -c "python manage.py prepare_app && gunicorn core.wsgi:application --bind 0.0.0.0:8000"
     volumes:
       - ./core:/app
-      - static_volume:/app/static
+      - static_volume:/app/staticfiles
       - media_volume:/app/media
     expose:
       - "8000"
@@ -40,7 +40,6 @@ services:
       - backend
     volumes:
       - ./core:/app
-      - static_volume:/app/static
       - media_volume:/app/media
     environment:
       - SECRET_KEY=django-insecure-)!w7$7wxdo*5@db%t#s2914wn(-ucf!)945v%p+$uobt@_k_%j

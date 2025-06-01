@@ -70,3 +70,14 @@ body {
     background-color: #f44336;
     color: #fff;
   }
+  .cke {
+    width: 100% !important;
+  }
+
+  .cke_contents {
+    min-height: 400px !important;
+  }
+
+  textarea {
+    margin-bottom: 0 !important;
+  }

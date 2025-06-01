@@ -16,7 +16,6 @@ from django.urls import reverse
 from django.views import View
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect
-from django.http import HttpResponseNotAllowed
 from accounts.models import Profile
 from .tasks import create_comment_task
 from .models import Post, Comment, CommentReport, Category
@@ -171,7 +170,7 @@ class PostCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
         """
         Handle invalid form submission with an error message.
         """
-        messages.error(self.request, "There was a problem creating the post. Please check the form and try again.")
+        messages.error(self.request, "An error occurred while creating the post. Please review the form and try again.")
         return super().form_invalid(form)
 
     def get_success_url(self):

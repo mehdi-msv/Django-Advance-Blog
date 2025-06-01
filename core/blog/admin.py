@@ -1,13 +1,15 @@
 from django.contrib import admin
 from .models import Post, Category
 from .models import Comment
+from .forms import PostForm
 
 
 # Register your models here.
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
     #   Define the fields to be displayed in the admin interface
-
+    form = PostForm
+    
     list_display = (
         "title",
         "author",
@@ -19,7 +21,7 @@ class PostAdmin(admin.ModelAdmin):
     list_filter = ("author", "category", "status", "published_date")
     search_fields = ("title", "author__email", "category__name", "content")
     ordering = ("-published_date",)
-
+    
 
 @admin.action(description="Delete selected comments and decrease author score by 25")
 def confirm_and_delete_comments(modeladmin, request, queryset):

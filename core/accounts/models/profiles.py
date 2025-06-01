@@ -12,7 +12,11 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     first_name = models.CharField(max_length=256)
     last_name = models.CharField(max_length=256)
-    image = models.ImageField(blank=True, null=True)
+    image = models.ImageField(
+        upload_to="profile_images/",
+        default="defaults/default_profile.png",
+        blank=True, null=True
+        )
     description = models.TextField(blank=True, null=True)
     score = models.PositiveIntegerField(default=50)
     last_score_update = models.DateTimeField(default=timezone.now)

@@ -51,6 +51,8 @@ INSTALLED_APPS = [
     "django_filters",
     "drf_yasg",
     "django_celery_beat",
+    "ckeditor",
+    "ckeditor_uploader",
     "accounts",
     "blog",
 ]
@@ -122,25 +124,34 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Asia/Tehran"
 
 USE_I18N = True
 
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
+# Static files (CSS, JS, etc.)
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # only used in production
+STATICFILES_DIRS = [BASE_DIR / 'static']  # for development
 
-STATIC_URL = "static/"
-STATIC_ROOT = "static/"
+# Media files (User uploads, like images)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
-MEDIA_URL = "media/"
-MEDIA_ROOT = "media/"
+# Ckeditor configuration
+CKEDITOR_UPLOAD_PATH = "uploads/"
+CKEDITOR_IMAGE_BACKEND = "pillow"
 
-STATICFILES_DIRS = [
-    BASE_DIR / "staticfiles",
-]
+
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'full',
+        'height': 400,
+        'width': '100%',
+    },
+}
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
@@ -194,6 +205,7 @@ CORS_ALLOWED_ORIGINS = [
 CELERY_BROKER_URL = config(
     "CELERY_BROKER_URL", default="redis://redis:6379/1"
 )
+CELERY_TIMEZONE = "Asia/Tehran"
 
 # Celery beat configuration
 
@@ -213,3 +225,8 @@ CACHES = {
         },
     }
 }
+
+# Authentication
+
+LOGIN_URL = "/accounts/signin/"
+LOGOUT_REDIRECT_URL = "/blog/"

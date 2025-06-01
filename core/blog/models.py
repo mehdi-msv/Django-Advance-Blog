@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.utils.text import slugify
 import re
 from decouple import config
+from ckeditor_uploader.fields import RichTextUploadingField
 
 # Create your models here.
 def get_bad_words():
@@ -16,12 +17,17 @@ class Post(models.Model):
     """
 
     author = models.ForeignKey("accounts.Profile", on_delete=models.CASCADE, related_name="posts")
-    image = models.ImageField(upload_to='post_images/', blank=True, null=True)
+    image = models.ImageField(
+        upload_to='post_images/',
+        blank=True,
+        null=True,
+        default='defaults/default_post.png'
+    )
     category = models.ForeignKey(
         "Category", on_delete=models.SET_NULL, null=True
     )
     title = models.CharField(max_length=256)
-    content = models.TextField()
+    content = RichTextUploadingField()
     status = models.BooleanField()
     slug = models.SlugField(unique=True, blank=True)
     
