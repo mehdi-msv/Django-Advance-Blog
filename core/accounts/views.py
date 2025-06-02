@@ -1,5 +1,5 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import DetailView, CreateView
+from django.views.generic import DetailView, CreateView, RedirectView, View
 from django.contrib.auth.views import LoginView
 from django.views.generic.edit import FormMixin
 from django.urls import reverse_lazy
@@ -7,7 +7,10 @@ from django.contrib import messages
 from django.shortcuts import redirect
 from django.contrib.auth import get_user_model
 from django.contrib.auth import login
+from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.exceptions import TokenError
 
+from .tasks import send_verification_email
 from .models import Profile
 from .forms import ProfileUpdateForm, UserCreationForm
 
@@ -119,3 +122,68 @@ class SignUpView(CreateView):
     def form_invalid(self, form):
         messages.error(self.request, "There was an error creating your account. Please check the form.")
         return super().form_invalid(form)
+
+
+class SendVerificationEmailView(LoginRequiredMixin, RedirectView):
+    """
+    View to send a verification email to the logged-in user.
+    Redirects to the profile page after attempting to send the email.
+    """
+    permanent = False  # This affects HTTP caching headers; False is typical for dynamic views
+
+    def get_redirect_url(self, *args, **kwargs):
+        # Redirects to the profile page after the task is triggered
+        return reverse_lazy('accounts:profile')
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+
+        if not user.is_verified:
+            # Send the verification email using Celery async task
+            send_verification_email.delay(user.id)
+            messages.success(request, 'Verification email has been sent to your inbox.')
+        else:
+            # Inform the user if already verified
+            messages.info(request, 'Your email is already verified.')
+
+        return super().get(request, *args, **kwargs)
+
+
+class VerifyAccountTokenView(View):
+    """
+    View to activate a user's account using a JWT token from the email link.
+    """
+
+    def get(self, request, token, *args, **kwargs):
+        try:
+            # Decode the token using SimpleJWT
+            access_token = AccessToken(token)
+
+            # Optional: Check the token purpose to ensure it's for email verification
+            if access_token.get('purpose') != 'email_verification':
+                messages.error(request, "Invalid token purpose.")
+                return redirect(reverse_lazy("accounts:login"))
+
+            # Extract user ID from the token payload
+            user_id = access_token["user_id"]
+            user = User.objects.get(id=user_id)
+
+        except TokenError:
+            # Handle invalid or expired tokens
+            messages.error(request, "Invalid or expired activation link.")
+            return redirect(reverse_lazy("accounts:profile"))
+        except User.DoesNotExist:
+            # Handle invalid user references
+            messages.error(request, "User does not exist.")
+            return redirect(reverse_lazy("accounts:login"))
+
+        if not user.is_verified:
+            # Mark user as verified and save
+            user.is_verified = True
+            user.save()
+            messages.success(request, "Your account has been successfully verified.")
+        else:
+            # Notify if already verified
+            messages.info(request, "Your account is already verified.")
+
+        return redirect(reverse_lazy("accounts:profile"))

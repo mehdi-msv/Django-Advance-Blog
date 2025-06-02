@@ -38,10 +38,10 @@
         <label>Email :</label>
         <span>{{ profile.email }}</span>
         <div class="verifyEmail">
-          {% if profile.is_verified %}
+          {% if profile.user.is_verified %}
             <span class="verify-badge verified">Verified</span>
           {% else %}
-            <a href=""><span class="verify-badge not-verified">Verify Email</span></a>
+            <a href="{% url 'accounts:send-verification-email' %}"><span class="verify-badge not-verified">Verify Email</span></a>
           {% endif %}
         </div>
       </div>
@@ -49,31 +49,30 @@
       <a href=""><button id="changePasswordBtn">Change Password</button></a>
 
       <hr />
+      {% if perms.blog.add_post %}
+        <div class="posts">
+          <h3>Created Posts:</h3>
 
-      <div class="posts">
-        <h3>Created Posts:</h3>
-
-        {% if perms.blog.add_post %}
           <a href="{% url 'blog:post-create' %}" class="addPost-btn">Add New Post +</a>
-        {% endif %}
 
-        {% if profile.posts.all %}
-          <ul id="userPostsList" class="user-posts">
-            {% for post in profile.posts.all %}
-              <li>
-                <a href="{% url 'blog:post-detail' slug=post.slug %}">{{ forloop.counter }}. {{ post.title }}</a>
-                <div class="icons">
-                  <a href="{% url 'blog:post-edit' slug=post.slug %}"><i class="bi bi-pencil-square" title="Edit"></i></a>
-                  <!-- دکمه‌ای که پاپ‌آپ رو باز می‌کنه -->
-                  <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" onclick="setSlug('{{ post.slug }}')"><i class="bi bi-trash"></i></button>
-                </div>
-              </li>
-            {% endfor %}
-          </ul>
-        {% else %}
-          <p>You haven't created any posts yet.</p>
-        {% endif %}
-      </div>
+          {% if profile.posts.all %}
+            <ul id="userPostsList" class="user-posts">
+              {% for post in profile.posts.all %}
+                <li>
+                  <a href="{% url 'blog:post-detail' slug=post.slug %}">{{ forloop.counter }}. {{ post.title }}</a>
+                  <div class="icons">
+                    <a href="{% url 'blog:post-edit' slug=post.slug %}"><i class="bi bi-pencil-square" title="Edit"></i></a>
+                    <!-- دکمه‌ای که پاپ‌آپ رو باز می‌کنه -->
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" onclick="setSlug('{{ post.slug }}')"><i class="bi bi-trash"></i></button>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p>You haven't created any posts yet.</p>
+          {% endif %}
+        </div>
+      {% endif %}
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   </body>

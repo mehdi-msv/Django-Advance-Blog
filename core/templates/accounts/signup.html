@@ -13,7 +13,7 @@
 
     <div class="signup-form">
       <h2>Sign Up</h2>
-      <form method="post" action="{% url 'accounts:sign-up' %}">
+      <form method="post" action="{% url 'accounts:signup' %}">
         {% csrf_token %}
         {{ form.non_field_errors }}
 

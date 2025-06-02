@@ -13,27 +13,35 @@ User = get_user_model()
 @shared_task
 def send_verification_email(user_id):
     """
-    Send verification email to the user with the given user_id.
-
-    If the user does not exist, do nothing.
+    Send verification email to the user with the given user_id using JWT token
+    with a custom claim (purpose=email_verification) and short expiration time.
     """
     try:
-        # Get the user object
         user = User.objects.get(id=user_id)
-        # Generate a JWT token for the user
-        token = str(RefreshToken.for_user(user).access_token)
-        # Create an email message
+
+        # Create a refresh token and access token
+        refresh = RefreshToken.for_user(user)
+        access_token = refresh.access_token
+
+        # Add a custom claim to clarify the purpose of the token
+        access_token['purpose'] = 'email_verification'
+
+        # Set token expiration to 1 day for email verification
+        access_token.set_exp(lifetime=timedelta(days=1))
+
+        # Convert token to string
+        token = str(access_token)
+
+        # Prepare and send the email
         message = EmailMessage(
             "email/email-confirm.tpl",
             {"user": user, "token": token},
             "mehdi.hunter.3242@gmail.com",
-            # Send the email to the user's email address
             to=[user.email],
         )
-        # Send the email
         message.send()
     except User.DoesNotExist:
-        # If the user does not exist, do nothing
+        # If user not found, silently ignore
         pass
 
 @shared_task

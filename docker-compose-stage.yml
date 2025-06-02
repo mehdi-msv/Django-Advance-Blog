@@ -22,7 +22,7 @@ services:
       - DEBUG=True
       - ALLOWED_HOSTS=localhost,127.0.0.1
       - EMAIL_HOST=smtp4dev
-      - EMAIL_PORT=587
+      - EMAIL_PORT=25
       - EMAIL_USE_TLS=False
       - ALGORITHM=HS256
       - SIGNING_KEY=django-insecure-)!w7$7wxdo*5@db%t#s2914wn(-ucf!)945v%p+$uobt@_k_%j
@@ -46,7 +46,7 @@ services:
       - DEBUG=True
       - ALLOWED_HOSTS=localhost,127.0.0.1
       - EMAIL_HOST=smtp4dev
-      - EMAIL_PORT=587
+      - EMAIL_PORT=25
       - EMAIL_USE_TLS=False
       - ALGORITHM=HS256
       - SIGNING_KEY=django-insecure-)!w7$7wxdo*5@db%t#s2914wn(-ucf!)945v%p+$uobt@_k_%j
@@ -68,7 +68,7 @@ services:
       - DEBUG=True
       - ALLOWED_HOSTS=localhost,127.0.0.1
       - EMAIL_HOST=smtp4dev
-      - EMAIL_PORT=587
+      - EMAIL_PORT=25
       - EMAIL_USE_TLS=False
       - ALGORITHM=HS256
       - SIGNING_KEY=django-insecure-)!w7$7wxdo*5@db%t#s2914wn(-ucf!)945v%p+$uobt@_k_%j
@@ -87,7 +87,30 @@ services:
     depends_on:
       - backend
       - redis
+  smtp4dev:
+    image: rnwood/smtp4dev:v3
+    restart: always
+    ports:
+      # Change the number before : to the port the web interface should be accessible on
+      - '5000:80'
+      # Change the number before : to the port the SMTP server should be accessible on
+      - '25:25'
+      # Change the number before : to the port the IMAP server should be accessible on
+      - '143:143'
+    volumes:
+      # This is where smtp4dev stores the database..
+        - smtp4dev-data:/smtp4dev
+    environment:
+      # Uncomment to customise these settings
+      # This is not a complete list of the available settings.
+      # See the documentation in appsettings.json for a full list.
 
+      #Specifies the URLs the web UI will use inside the container.
+      - ServerOptions__Urls=http://*:80
+
+      #Specifies the server hostname. Used in auto-generated TLS certificate if enabled.
+      - ServerOptions__HostName=smtp4dev
 volumes:
+  smtp4dev-data:
   static_volume:
   media_volume:
