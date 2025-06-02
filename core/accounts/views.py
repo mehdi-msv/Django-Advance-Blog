@@ -1,6 +1,6 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import DetailView, CreateView, RedirectView, View
-from django.contrib.auth.views import LoginView
+from django.views.generic import DetailView, CreateView, RedirectView, View, FormView
+from django.contrib.auth.views import LoginView, PasswordChangeView, PasswordResetView
 from django.views.generic.edit import FormMixin
 from django.urls import reverse_lazy
 from django.contrib import messages
@@ -10,9 +10,9 @@ from django.contrib.auth import login
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework_simplejwt.exceptions import TokenError
 
-from .tasks import send_verification_email
+from .tasks import send_verification_email, send_password_reset_email
 from .models import Profile
-from .forms import ProfileUpdateForm, UserCreationForm
+from .forms import ProfileUpdateForm, UserCreationForm, CustomSetPasswordForm, CustomPasswordChangeForm
 
 
 
@@ -141,7 +141,7 @@ class SendVerificationEmailView(LoginRequiredMixin, RedirectView):
         if not user.is_verified:
             # Send the verification email using Celery async task
             send_verification_email.delay(user.id)
-            messages.success(request, 'Verification email has been sent to your inbox.')
+            messages.success(request, 'Verification email has been sent to your email.')
         else:
             # Inform the user if already verified
             messages.info(request, 'Your email is already verified.')
@@ -187,3 +187,122 @@ class VerifyAccountTokenView(View):
             messages.info(request, "Your account is already verified.")
 
         return redirect(reverse_lazy("accounts:profile"))
+
+
+class CustomPasswordChangeView(PasswordChangeView):
+    """
+    Custom view to handle password change requests.
+    """
+    form_class = CustomPasswordChangeForm
+    template_name = "accounts/password_change.html"
+    success_url = reverse_lazy("accounts:profile")
+
+    def form_valid(self, form):
+        """
+        If the form is valid, change the user's password and show a success message.
+        """
+        messages.success(self.request, "Your password has been changed successfully.")
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        """
+        If the form is invalid, show an error message.
+        """
+        messages.error(self.request, "Please correct the errors below.")
+        return super().form_invalid(form)
+    
+
+class CustomPasswordResetView(PasswordResetView):
+    template_name = 'accounts/password_reset.html'
+    success_url = reverse_lazy('accounts:login')
+
+    def form_valid(self, form):
+        """
+        Handle a valid form submission for password reset.
+        Sends the reset email asynchronously via Celery task.
+        If user with the given email does not exist, show an error message.
+        Redirect to success_url after processing.
+        """
+        email = form.cleaned_data.get("email")
+        try:
+            # Try to find the user by email
+            user = User.objects.get(email=email)
+            # Trigger sending password reset email asynchronously
+            send_password_reset_email.delay(user.id)
+            messages.success(self.request, "Password reset email has been sent.")
+        except User.DoesNotExist:
+            # Show error if user not found
+            messages.error(self.request, "No user found with this email address.")
+
+        # Instead of calling super().form_valid(form),
+        # directly redirect to the success_url.
+        return redirect(self.get_success_url())
+    
+    def get_success_url(self):
+        return reverse_lazy("accounts:login")
+
+
+class PasswordResetConfirmView(FormView):
+    """
+    View to handle the password reset confirmation process.
+    Validates the reset token, allows the user to set a new password, and handles success and error messages.
+    """
+    template_name = "accounts/password_reset_confirm.html"
+    form_class = CustomSetPasswordForm
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Overrides dispatch to retrieve the user based on the token before processing the request.
+        This ensures that the user is available to the form and other methods.
+        """
+        self.user = self.get_user()
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_user(self):
+        """
+        Attempts to decode and validate the password reset token.
+        Returns the user associated with the token if valid and intended for password reset; otherwise returns None.
+        """
+        try:
+            token = self.kwargs.get("token")
+            access_token = AccessToken(token)
+            if access_token.get('purpose') != 'password_reset':
+                return None
+            user_id = access_token["user_id"]
+            return User.objects.get(id=user_id)
+        except (TokenError, User.DoesNotExist):
+            return None
+
+    def get_form_kwargs(self):
+        """
+        Adds the user object to the form kwargs so the form can validate and save the new password for that user.
+        """
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.user
+        return kwargs
+
+    def form_valid(self, form):
+        """
+        Handles valid form submission.
+        If the user is valid, saves the new password and shows a success message, then redirects to login.
+        If the user is invalid or token expired, shows an error and redirects to login.
+        """
+        if not self.user:
+            messages.error(self.request, "Invalid or expired reset link.")
+            return redirect("accounts:login")
+
+        form.save()
+        messages.success(self.request, "Your password has been reset successfully.")
+        return redirect("accounts:login")
+
+    def form_invalid(self, form):
+        """
+        Handles invalid form submission.
+        If the user is invalid or token expired, shows an error and redirects to login.
+        Otherwise, re-renders the form with validation errors.
+        """
+        if not self.user:
+            messages.error(self.request, "Invalid or expired reset link.")
+            return redirect("accounts:login")
+
+        return self.render_to_response(self.get_context_data(form=form))

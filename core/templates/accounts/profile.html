@@ -46,7 +46,7 @@
         </div>
       </div>
 
-      <a href=""><button id="changePasswordBtn">Change Password</button></a>
+      <a href="{% url 'accounts:change-password' %}"><button id="changePasswordBtn">Change Password</button></a>
 
       <hr />
       {% if perms.blog.add_post %}

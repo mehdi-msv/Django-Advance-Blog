@@ -4,7 +4,10 @@ from .views import (
     CustomLoginView,
     SignUpView,
     VerifyAccountTokenView,
-    SendVerificationEmailView
+    SendVerificationEmailView,
+    PasswordResetConfirmView,
+    CustomPasswordChangeView,
+    CustomPasswordResetView,
 )
 
 
@@ -21,4 +24,7 @@ urlpatterns = [
     path("signup/", SignUpView.as_view(), name="signup"),
     path("verify/<str:token>/", VerifyAccountTokenView.as_view(), name="verify"),
     path("send-verification-email/", SendVerificationEmailView.as_view(), name="send-verification-email"),
+    path("change-password/", CustomPasswordChangeView.as_view(), name="change-password"),
+    path("reset-password/", CustomPasswordResetView.as_view(), name="reset-password"),
+    path("reset-password/<str:token>/", PasswordResetConfirmView.as_view(), name="reset-password-confirm"),
 ]
