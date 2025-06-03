@@ -25,19 +25,59 @@ from .permissions import VerifiedUserRequiredMixin, CustomLoginRequiredMixin
 
 
 class PostListView(ListView):
-    context_object_name = "posts"
-    ordering = "-published_date"
-    paginate_by = 4
+    """
+    Displays a list of blog posts with filtering and pagination.
+    """
+    model = Post
+    context_object_name = 'posts'
+    template_name = 'blog/post_list.html'
+    paginate_by = 3
+    ordering = ['-published_date']
 
     def get_queryset(self):
-        key = f"cached_posts_page_{self.request.GET.get('page', 1)}"
-        return cache.get_or_set(key, self._get_posts(), 10)
+        # Build a cache key based on page number, search term, and selected category
+        page = self.request.GET.get('page', 1)
+        search_query = self.request.GET.get('search', '').strip()
+        category_name = self.request.GET.get('category', '').strip()
+        cache_key = f"cached_posts_page_{page}_search_{search_query}_cat_{category_name}"
 
-    def _get_posts(self):
-        return Post.objects.filter(
-            status=True,
-            published_date__lte=timezone.now()
-        ).order_by('-published_date')
+        # Try to retrieve the filtered queryset from cache
+        cached_queryset = cache.get(cache_key)
+        if cached_queryset is not None:
+            return cached_queryset
+
+        # Base filter: only include posts that are published and have a publish date in the past
+        base_filter = Q(status=True, published_date__lte=timezone.now())
+
+        # If a search term is provided, filter by title or content (case-insensitive)
+        if search_query:
+            base_filter &= (
+                Q(title__icontains=search_query) |
+                Q(content__icontains=search_query)
+            )
+
+        # If a category is selected, filter by that category's name
+        if category_name:
+            base_filter &= Q(category__name=category_name)
+
+        # Execute the final query, order by newest first, and remove duplicates
+        queryset = Post.objects.filter(base_filter).order_by('-published_date').distinct()
+
+        # Store the result in cache for 10 minutes (tweak as needed)
+        cache.set(cache_key, queryset, 60 * 10)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Pass the current search and category parameters to the template for form pre-filling
+        context['search_query'] = self.request.GET.get('search', '')
+        context['selected_category'] = self.request.GET.get('category', '')
+
+        # Provide the full list of categories for the dropdown
+        context['categories'] = Category.objects.all()
+        return context
+
 
 
 class PostDetailView(CustomLoginRequiredMixin, DetailView):

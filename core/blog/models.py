@@ -58,7 +58,7 @@ class Post(models.Model):
 
 class Category(models.Model):
 
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=50, unique=True)
 
     def get_absolute_api_url(self):
         return reverse("blog:api-v1:category-detail", kwargs={"pk": self.pk})
