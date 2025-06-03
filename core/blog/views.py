@@ -7,46 +7,45 @@ from django.views.generic import (
     FormView
 )
 from django.contrib.auth.mixins import (
-    LoginRequiredMixin, PermissionRequiredMixin
+    PermissionRequiredMixin
 )
-from django.views.decorators.cache import cache_page
-from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django.urls import reverse
 from django.views import View
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect
 from accounts.models import Profile
+from django.core.cache import cache
+from django.db.models import Q
 from .tasks import create_comment_task
 from .models import Post, Comment, CommentReport, Category
 from .forms import PostForm, CommentForm
-from .permissions import VerifiedUserRequiredMixin
+from .permissions import VerifiedUserRequiredMixin, CustomLoginRequiredMixin
 # Create your views here.
 
-# Caches the entire PostListView for 5 minutes to improve performance
-@method_decorator(cache_page(60 * 5), name="dispatch")
+
 class PostListView(ListView):
-    """
-    Displays a paginated list of published blog posts.
-    """
-    queryset = Post.objects.filter(
-        status=True,  # Only include posts marked as published
-        published_date__lte=timezone.now()  # Only include posts published in the past
-    )
-    context_object_name = "posts"  # Use 'posts' instead of 'object_list' in the template
-    ordering = "-published_date"  # Show latest posts first
-    paginate_by = 4  # Limit to 4 posts per page
+    context_object_name = "posts"
+    ordering = "-published_date"
+    paginate_by = 4
+
+    def get_queryset(self):
+        key = f"cached_posts_page_{self.request.GET.get('page', 1)}"
+        return cache.get_or_set(key, self._get_posts(), 10)
+
+    def _get_posts(self):
+        return Post.objects.filter(
+            status=True,
+            published_date__lte=timezone.now()
+        ).order_by('-published_date')
 
 
-class PostDetailView(LoginRequiredMixin, DetailView):
+class PostDetailView(CustomLoginRequiredMixin, DetailView):
     """
     Displays the detail page of a single post.
     Only accessible to logged-in users.
     """
-    queryset = Post.objects.filter(
-        status=True,
-        published_date__lte=timezone.now()
-    )
+    
     context_object_name = "post"  # Use 'post' instead of default 'object' in the template
 
     def get_context_data(self, **kwargs):
@@ -68,8 +67,14 @@ class PostDetailView(LoginRequiredMixin, DetailView):
         context["form"] = CommentForm(initial={"post": post})
         return context
 
+    def get_queryset(self):
+        return Post.objects.filter(
+            Q(status=True, published_date__lte=timezone.now())
+            |
+            Q(author=self.request.user.profile)
+        ).distinct()
 
-class CommentCreateView(LoginRequiredMixin, VerifiedUserRequiredMixin, FormView):
+class CommentCreateView(CustomLoginRequiredMixin, VerifiedUserRequiredMixin, FormView):
     """
     Handles creation of new comments using a Django FormView.
     Only logged-in and verified users can post comments.
@@ -102,7 +107,7 @@ class CommentCreateView(LoginRequiredMixin, VerifiedUserRequiredMixin, FormView)
         return redirect("blog:post-detail", slug=self.kwargs.get("slug"))
 
 
-class CommentReportView(LoginRequiredMixin, VerifiedUserRequiredMixin, View):
+class CommentReportView(CustomLoginRequiredMixin, VerifiedUserRequiredMixin, View):
     """
     Allows users to report inappropriate comments.
     Prevents duplicate reports and self-reporting.
@@ -129,7 +134,7 @@ class CommentReportView(LoginRequiredMixin, VerifiedUserRequiredMixin, View):
         return redirect("blog:post-detail", slug=comment.post.slug)
 
 
-class PostCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+class PostCreateView(CustomLoginRequiredMixin, PermissionRequiredMixin, CreateView):
     """
     View to allow authorized users to create a new blog post.
     Only users with the 'blog.add_post' permission are allowed.
@@ -180,7 +185,7 @@ class PostCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
         return reverse("accounts:profile")
 
 
-class PostEditView(LoginRequiredMixin, UpdateView):
+class PostEditView(CustomLoginRequiredMixin, UpdateView):
     """
     A class-based view to edit an existing post.
     Only accessible to the author of the post.
@@ -214,7 +219,7 @@ class PostEditView(LoginRequiredMixin, UpdateView):
         return reverse("blog:post-detail", kwargs={"slug": self.object.slug})
 
 
-class PostDeleteView(LoginRequiredMixin, DeleteView):
+class PostDeleteView(CustomLoginRequiredMixin, DeleteView):
     """
     Handles the deletion of a post by its author.
     Ensures only the owner of the post can delete it.

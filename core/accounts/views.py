@@ -1,6 +1,6 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import DetailView, CreateView, RedirectView, View, FormView
-from django.contrib.auth.views import LoginView, PasswordChangeView, PasswordResetView
+from django.contrib.auth.views import LoginView, PasswordChangeView, PasswordResetView, LogoutView
 from django.views.generic.edit import FormMixin
 from django.urls import reverse_lazy
 from django.contrib import messages
@@ -35,7 +35,7 @@ class ProfileDetailView(LoginRequiredMixin, FormMixin, DetailView):
 
     def get_success_url(self):
         # Redirect to the same profile page after a successful form submission
-        return reverse_lazy('profile')
+        return reverse_lazy('accounts:profile')
 
     def get_form_kwargs(self):
         # Ensure the form uses the current profile instance
@@ -65,6 +65,7 @@ class ProfileDetailView(LoginRequiredMixin, FormMixin, DetailView):
         return self.render_to_response(self.get_context_data(form=form))
 
 
+
 class CustomLoginView(LoginView):
     """
     Custom login view for the application.
@@ -73,16 +74,19 @@ class CustomLoginView(LoginView):
     template_name = "accounts/signin.html"
     redirect_authenticated_user = True
     fields = "username", "password"
-    success_url = reverse_lazy("blog:post-list")
-    
+
     def get(self, request, *args, **kwargs):
         """
         If the user is already authenticated, redirect and show a message.
         """
         if request.user.is_authenticated:
             messages.info(self.request, "You are already logged in.")
-            return redirect(self.success_url)
+            return redirect(self.get_success_url())
         return super().get(request, *args, **kwargs)
+
+    def get_success_url(self):
+        next_url = self.request.GET.get("next") or self.request.POST.get("next")
+        return next_url or reverse_lazy("blog:post-list")
 
     def form_invalid(self, form):
         """
@@ -90,6 +94,7 @@ class CustomLoginView(LoginView):
         """
         messages.error(self.request, "Invalid username or password.")
         return super().form_invalid(form)
+
 
 class SignUpView(CreateView):
     """
@@ -122,6 +127,15 @@ class SignUpView(CreateView):
     def form_invalid(self, form):
         messages.error(self.request, "There was an error creating your account. Please check the form.")
         return super().form_invalid(form)
+
+
+class CustomLogoutView(LogoutView):
+    """
+    Custom logout view to display a success message.
+    """
+    def dispatch(self, request, *args, **kwargs):
+        messages.success(request, "You have been logged out successfully.")
+        return super().dispatch(request, *args, **kwargs)
 
 
 class SendVerificationEmailView(LoginRequiredMixin, RedirectView):

@@ -5,46 +5,80 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blog</title>
+
     <link rel="stylesheet" href="{% static 'blog/HomPage.css' %}" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <title>Document</title>
   </head>
   <body>
     {% include 'messages/messages.html' %}
-    <div class="">
-      <div class="navBar">
-        <div class="profile">
-          <a href="{% url 'accounts:profile' %}"><i class="bi bi-person-circle"></i></a>
+
+    <div class="container-fluid px-4">
+      <div class="navBar d-flex justify-content-between align-items-center flex-wrap py-3">
+        {% if user.is_authenticated %}
+          <div class="d-flex align-items-center gap-3">
+            <a href="{% url 'accounts:profile' %}" class="btn btn-outline-primary">
+              <i class="bi bi-person-circle fs-4"></i>
+            </a>
+            <form action="{% url 'accounts:logout' %}" method="post">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger">Logout</button>
+            </form>
+          </div>
+        {% else %}
+          <div class="d-flex gap-2">
+            <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary">Log In</a>
+            <a href="{% url 'accounts:signup' %}" class="btn btn-primary">Sign Up</a>
+          </div>
+        {% endif %}
+
+        <div class="searchBar mx-auto">
+          <input
+            type="text"
+            placeholder="Search..."
+            class="form-control w-100"
+            name="search"
+            value="{{ request.GET.search }}"
+          />
+          <i class="bi bi-search search-icon"></i>
         </div>
-        <div class="searchBar">
-          <input type="text" placeholder="دنبال چی میگردی؟" />
-          <i class="bi bi-search-heart"></i>
-        </div>
-        <select id="nameFilter" class="nameFilter">
-          <option value="">همه</option>
-          <option value="asus">Asus</option>
-          <option value="dell">Dell</option>
-          <option value="hp">HP</option>
-        </select>
+
+        <form method="get">
+          <select id="nameFilter" name="nameFilter" class="form-select nameFilter">
+            <option value="">All Categories</option>
+            <option value="asus" {% if request.GET.nameFilter == 'asus' %}selected{% endif %}>Asus</option>
+            <option value="dell" {% if request.GET.nameFilter == 'dell' %}selected{% endif %}>Dell</option>
+            <option value="hp" {% if request.GET.nameFilter == 'hp' %}selected{% endif %}>HP</option>
+          </select>
+        </form>
       </div>
+
       <div class="cards">
-        <h4>پست ها</h4>
+        <h4 class="text-center my-4">Posts</h4>
         <ul id="laptopList">
           {% for post in posts %}
             <li>
-              <img src="{{ post.image.url }}" alt="{{ post.title }}" onerror="this.src='/img/placeholder.jpg'" />
+              <img
+                src="{{ post.image.url }}"
+                alt="{{ post.title }}"
+                onerror="this.src='/static/img/placeholder.jpg'"
+              />
               <h3>{{ post.title }}</h3>
               <div class="button-card">
-                <p class="btn">{{ post.author }}</p>
+                <p class="btn btn-sm btn-outline-secondary">{{ post.author }}</p>
               </div>
-              <p class="text">{{ post.content|truncatewords:15|safe }}</p>
-              <a class="buy-btn" href="{% url 'blog:post-detail' post.slug %}">مشاهده پست</a>
+              <!-- Show full content (no truncate), wrapped within the card -->
+              <p class="text">{{ post.content|safe }}</p>
+              <a class="buy-btn" href="{% url 'blog:post-detail' post.slug %}">View Post</a>
             </li>
+          {% empty %}
+            <p class="text-center">No posts found.</p>
           {% endfor %}
         </ul>
-        <div class="Pagination">
-          {% if is_paginated %}
+
+        {% if is_paginated %}
+          <div class="Pagination">
             {% if page_obj.has_previous %}
               <a href="?page={{ page_obj.previous_page_number }}">&lt;</a>
             {% else %}
@@ -64,10 +98,11 @@
             {% else %}
               <span class="disabled">&gt;</span>
             {% endif %}
-          {% endif %}
-        </div>
+          </div>
+        {% endif %}
       </div>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>

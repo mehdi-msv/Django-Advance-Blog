@@ -228,5 +228,5 @@ CACHES = {
 
 # Authentication
 
-LOGIN_URL = "/accounts/signin/"
+LOGIN_URL = "/accounts/login/"
 LOGOUT_REDIRECT_URL = "/blog/"
