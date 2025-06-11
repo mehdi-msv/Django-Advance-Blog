@@ -37,13 +37,15 @@ urlpatterns = [
     ),
     path("profile/", views.ProfileAPIView.as_view(), name="profile"),
     path(
-        "activation/confirm/<str:token>/",
-        views.ActivationAPIView.as_view(),
-        name="activation",
+        "email-verification/confirm/<str:token>/",
+        views.VerifyAccountTokenAPIView.as_view(),
+        name="email_verification_confirm",
     ),
     path(
-        "activation/resend",
-        views.ActivationResendAPIView.as_view(),
-        name="activation_resend",
+        "email-verification/resend",
+        views.VerificationResendAPIView.as_view(),
+        name="email_verification_resend",
     ),
+    path("password/reset/", views.PasswordResetAPIView.as_view(), name="password_reset"),
+    path("password/reset/confirm/<str:token>/", views.PasswordResetConfirmAPIView.as_view(), name="password_reset_confirm"),
 ]
