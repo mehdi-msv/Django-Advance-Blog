@@ -12,11 +12,11 @@ from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from rest_framework.parsers import MultiPartParser, FormParser
 
-from ...utils.throttles import (
-    ChangePasswordThrottle,
-    ResetPasswordThrottle,
-    RegisterThrottle,
-    VerificationResendThrottle
+from ...utils import (
+    APIChangePasswordThrottle,
+    APIResetPasswordThrottle,
+    APIRegisterThrottle,
+    APIVerificationResendThrottle
     )
 from ...models import Profile
 from .serializers import (
@@ -43,7 +43,7 @@ class RegistrationAPIView(GenericAPIView):
     """
     serializer_class = RegistrationSerializer
     permission_classes = [AllowAny]
-    throttle_classes = [RegisterThrottle]
+    throttle_classes = [APIRegisterThrottle]
 
     def post(self, request, *args, **kwargs):
         throttle = self.get_throttles()[0]
@@ -131,7 +131,7 @@ class ChangePasswordAPIView(GenericAPIView):
     """
     serializer_class = ChangePasswordSerializer
     permission_classes = [IsAuthenticated]
-    throttle_classes = [ChangePasswordThrottle]
+    throttle_classes = [APIChangePasswordThrottle]
 
     def put(self, request, *args, **kwargs):
         throttle = self.get_throttles()[0]
@@ -262,7 +262,7 @@ class VerificationResendAPIView(APIView):
     Uses both custom cooldown and DRF global throttling.
     """
     permission_classes = [IsAuthenticated]
-    throttle_classes = [VerificationResendThrottle]
+    throttle_classes = [APIVerificationResendThrottle]
     
     def post(self, request, *args, **kwargs):
         throttle = self.get_throttles()[0]
@@ -288,7 +288,7 @@ class PasswordResetAPIView(APIView):
     API view to request a password reset. Accepts an email and triggers an async email task.
     """
     permission_classes = [AllowAny]
-    throttle_classes = [ResetPasswordThrottle]
+    throttle_classes = [APIResetPasswordThrottle]
 
     def post(self, request):
         throttle = self.get_throttles()[0]

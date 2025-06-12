@@ -4,7 +4,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from celery import shared_task
 from django.utils import timezone
 from datetime import timedelta
+from django.utils.module_loading import import_string
+
+from .utils import SCOPE_CONFIG_MAP
 from .models import Profile
+from .models.throttle_records import ThrottleRecord
 
 
 User = get_user_model()
@@ -97,3 +101,39 @@ def monthly_add_score():
         profile.score = min(profile.score + 10, 100)
         profile.last_score_update = now
         profile.save()
+
+@shared_task
+def clear_throttle_after_grace():
+    """
+    Periodic task that deletes throttle records of users who haven't
+    violated throttling rules for twice their cooldown period.
+
+    Cooldown = base_window * 2^level
+    base_window is fetched per-scope from throttle class or view class.
+    Only records with `last_blocked_at` are considered.
+    """
+    now = timezone.now()
+    records = ThrottleRecord.objects.exclude(last_blocked_at__isnull=True)
+
+    for record in records:
+        scope_config = SCOPE_CONFIG_MAP.get(record.scope)
+        if not scope_config:
+            continue  # Unknown scope
+
+        # If config is a string, import the class
+        if isinstance(scope_config, str):
+            try:
+                scope_config = import_string(scope_config)
+            except ImportError:
+                continue  # Invalid path, skip
+
+        # Try to get base_window from class attribute
+        base_window = getattr(scope_config, "throttle_base_window", None) or getattr(scope_config, "base_window", None)
+        if base_window is None:
+            continue  # Skip if not defined
+
+        cooldown = base_window * (2 ** record.level)
+        grace_period = timedelta(seconds=cooldown * 2)
+
+        if record.last_blocked_at + grace_period < now:
+            record.delete()

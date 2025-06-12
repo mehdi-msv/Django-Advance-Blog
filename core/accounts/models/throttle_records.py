@@ -7,6 +7,7 @@ class ThrottleRecord(models.Model):
     level = models.PositiveIntegerField(default=0)
     attempts = models.PositiveIntegerField(default=0)
     expires_at = models.DateTimeField()
+    last_blocked_at = models.DateTimeField(null=True, blank=True)
     
     updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)

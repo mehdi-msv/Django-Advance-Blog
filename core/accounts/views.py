@@ -13,7 +13,7 @@ from rest_framework_simplejwt.exceptions import TokenError
 from .tasks import send_verification_email, send_password_reset_email
 from .models import Profile
 from .forms import ProfileUpdateForm, UserCreationForm, CustomSetPasswordForm, CustomPasswordChangeForm
-
+from .utils import ThrottleMixin
 
 
 User = get_user_model()
@@ -66,15 +66,23 @@ class ProfileDetailView(LoginRequiredMixin, FormMixin, DetailView):
 
 
 
-class CustomLoginView(LoginView):
+class CustomLoginView(ThrottleMixin, LoginView):
     """
     Custom login view for the application.
+    This view handles user login with throttling.
     """
 
     template_name = "accounts/signin.html"
     redirect_authenticated_user = True
     fields = "username", "password"
-
+    
+    throttle_scope = "login"
+    throttle_redirect_url = reverse_lazy("accounts:signup")
+    throttle_allowed_attempts = 10
+    throttle_base_window = 60 * 5  # 5 minutes
+    throttle_max_level = 5
+    throttle_reset_threshold = 3
+    
     def get(self, request, *args, **kwargs):
         """
         If the user is already authenticated, redirect and show a message.
@@ -85,6 +93,7 @@ class CustomLoginView(LoginView):
         return super().get(request, *args, **kwargs)
 
     def get_success_url(self):
+        self.reset_throttle_level()
         next_url = self.request.GET.get("next") or self.request.POST.get("next")
         return next_url or reverse_lazy("blog:post-list")
 
@@ -92,20 +101,27 @@ class CustomLoginView(LoginView):
         """
         Show error message on invalid login.
         """
+        self.record_throttle_attempt()
         messages.error(self.request, "Invalid username or password.")
         return super().form_invalid(form)
 
 
-class SignUpView(CreateView):
+class SignUpView(ThrottleMixin, CreateView):
     """
     Register a new user for the application.
     """
-
     model = User
     form_class = UserCreationForm
     template_name = "accounts/signup.html"
     success_url = reverse_lazy("blog:post-list")
 
+    throttle_scope = "signup"
+    throttle_redirect_url = reverse_lazy("blog:post-list")
+    throttle_allowed_attempts = 5
+    throttle_base_window = 60 * 10  # 10 minutes
+    throttle_max_level = 10
+    throttle_reset_threshold = 3
+    
     def get(self, request, *args, **kwargs):
         """
         Check if the user is authenticated before allowing registration.
@@ -119,12 +135,15 @@ class SignUpView(CreateView):
         """
         Save the new user and log them in after successful registration.
         """
+        self.reset_throttle_level()
+        self.record_throttle_attempt()
         user = form.save()
         login(self.request, user)
         messages.success(self.request, "Your account has been created successfully.")
         return redirect(self.success_url)
     
     def form_invalid(self, form):
+        self.record_throttle_attempt()
         messages.error(self.request, "There was an error creating your account. Please check the form.")
         return super().form_invalid(form)
 
@@ -138,12 +157,19 @@ class CustomLogoutView(LogoutView):
         return super().dispatch(request, *args, **kwargs)
 
 
-class SendVerificationEmailView(LoginRequiredMixin, RedirectView):
+class SendVerificationEmailView(LoginRequiredMixin, ThrottleMixin, RedirectView):
     """
     View to send a verification email to the logged-in user.
     Redirects to the profile page after attempting to send the email.
     """
     permanent = False  # This affects HTTP caching headers; False is typical for dynamic views
+
+    throttle_scope = "verification_email"
+    throttle_redirect_url = reverse_lazy("accounts:profile")
+    throttle_allowed_attempts = 3
+    throttle_base_window = 60 * 5
+    throttle_max_level = 5
+    throttle_reset_threshold = 3
 
     def get_redirect_url(self, *args, **kwargs):
         # Redirects to the profile page after the task is triggered
@@ -151,8 +177,8 @@ class SendVerificationEmailView(LoginRequiredMixin, RedirectView):
 
     def get(self, request, *args, **kwargs):
         user = request.user
-
         if not user.is_verified:
+            self.reset_throttle_level()
             # Send the verification email using Celery async task
             send_verification_email.delay(user.id)
             messages.success(request, 'Verification email has been sent to your email.')
@@ -160,6 +186,7 @@ class SendVerificationEmailView(LoginRequiredMixin, RedirectView):
             # Inform the user if already verified
             messages.info(request, 'Your email is already verified.')
 
+        self.record_throttle_attempt()
         return super().get(request, *args, **kwargs)
 
 
@@ -203,7 +230,7 @@ class VerifyAccountTokenView(View):
         return redirect(reverse_lazy("accounts:profile"))
 
 
-class CustomPasswordChangeView(PasswordChangeView):
+class CustomPasswordChangeView(ThrottleMixin, PasswordChangeView):
     """
     Custom view to handle password change requests.
     """
@@ -211,10 +238,19 @@ class CustomPasswordChangeView(PasswordChangeView):
     template_name = "accounts/password_change.html"
     success_url = reverse_lazy("accounts:profile")
 
+    throttle_scope = "password_change"
+    throttle_redirect_url = reverse_lazy("accounts:profile")
+    throttle_allowed_attempts = 5
+    throttle_base_window = 60 * 10  # 10 minutes
+    throttle_max_level = 5
+    throttle_reset_threshold = 3
+
     def form_valid(self, form):
         """
         If the form is valid, change the user's password and show a success message.
         """
+        self.reset_throttle_level()
+        self.record_throttle_attempt()
         messages.success(self.request, "Your password has been changed successfully.")
         return super().form_valid(form)
 
@@ -222,13 +258,21 @@ class CustomPasswordChangeView(PasswordChangeView):
         """
         If the form is invalid, show an error message.
         """
+        self.record_throttle_attempt()
         messages.error(self.request, "Please correct the errors below.")
         return super().form_invalid(form)
     
 
-class CustomPasswordResetView(PasswordResetView):
+class CustomPasswordResetView(ThrottleMixin, PasswordResetView):
     template_name = 'accounts/password_reset.html'
     success_url = reverse_lazy('accounts:login')
+
+    throttle_scope = "password_reset"
+    throttle_redirect_url = reverse_lazy("accounts:login")
+    throttle_allowed_attempts = 2
+    throttle_base_window = 60 * 5  # 5 minutes
+    throttle_max_level = 10
+    throttle_reset_threshold = 3
 
     def form_valid(self, form):
         """
@@ -243,8 +287,10 @@ class CustomPasswordResetView(PasswordResetView):
             user = User.objects.get(email=email)
             # Trigger sending password reset email asynchronously
             send_password_reset_email.delay(user.id)
+            self.reset_throttle_level()
             messages.success(self.request, "Password reset email has been sent.")
         except User.DoesNotExist:
+            self.record_throttle_attempt()
             # Show error if user not found
             messages.error(self.request, "No user found with this email address.")
 
