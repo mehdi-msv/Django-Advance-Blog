@@ -47,10 +47,12 @@ class Post(models.Model):
         super().save(*args, **kwargs)
 
     def get_snippet(self):
-        return self.content[0:5]
+        words = self.content.split()
+        snippet = " ".join(words[:10])
+        return snippet + "..." if len(words) > 10 else snippet
 
     def get_absolute_api_url(self):
-        return reverse("blog:api-v1:post-detail", kwargs={"pk": self.pk})
+        return reverse("blog:api-v1:post-detail", kwargs={"slug": self.slug})
     
     def __str__(self):
         return self.title
@@ -61,7 +63,7 @@ class Category(models.Model):
     name = models.CharField(max_length=50, unique=True)
 
     def get_absolute_api_url(self):
-        return reverse("blog:api-v1:category-detail", kwargs={"pk": self.pk})
+        return reverse("blog:api-v1:category-detail", kwargs={"name": self.name})
     
     def __str__(self):
         return self.name
@@ -110,3 +112,4 @@ class CommentReport(models.Model):
 
     def __str__(self):
         return f"{self.user} -> {self.comment}"
+    

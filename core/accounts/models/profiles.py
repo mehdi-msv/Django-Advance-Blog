@@ -30,5 +30,11 @@ class Profile(models.Model):
         self.last_score_update = timezone.now()
         self.save()
     
+    def full_name(self):
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        return self.user.email
+    
     def __str__(self):
         return self.user.email
+    

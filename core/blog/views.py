@@ -79,7 +79,6 @@ class PostListView(ListView):
         return context
 
 
-
 class PostDetailView(CustomLoginRequiredMixin, DetailView):
     """
     Displays the detail page of a single post.
@@ -113,6 +112,7 @@ class PostDetailView(CustomLoginRequiredMixin, DetailView):
             |
             Q(author=self.request.user.profile)
         ).distinct()
+
 
 class CommentCreateView(CustomLoginRequiredMixin, VerifiedUserRequiredMixin, FormView):
     """
