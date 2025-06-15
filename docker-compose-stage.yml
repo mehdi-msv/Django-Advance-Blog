@@ -1,11 +1,16 @@
 services:
   redis:
     container_name: redis
-    restart: always
     image: redis
+    restart: always
     expose:
       - "6379"
     command: redis-server --save 60 1 --loglevel warning
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: .
@@ -17,41 +22,51 @@ services:
       - media_volume:/app/media
     expose:
       - "8000"
-    environment:
-      - SECRET_KEY=django-insecure-)!w7$7wxdo*5@db%t#s2914wn(-ucf!)945v%p+$uobt@_k_%j
-      - DEBUG=True
-      - ALLOWED_HOSTS=localhost,127.0.0.1
-      - EMAIL_HOST=smtp4dev
-      - EMAIL_PORT=25
-      - EMAIL_USE_TLS=False
-      - ALGORITHM=HS256
-      - SIGNING_KEY=django-insecure-)!w7$7wxdo*5@db%t#s2914wn(-ucf!)945v%p+$uobt@_k_%j
-      - CELERY_BROKER_URL=redis://redis:6379/1
-      - BAD_WORDS=word1,word2,word3
+    restart: always
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env.stage
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--output", "/dev/null", "http://127.0.0.1:8000"]
+      start_period: 60s
+      interval: 60s
+      timeout: 10s
+      retries: 5
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    restart: always
+    env_file:
+      - .env.stage
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   celery_worker:
     build: .
     image: celery_worker
     command: celery -A core worker -l INFO
+    restart: always
     depends_on:
-      - redis
-      - backend
+      backend:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - ./core:/app
-      - media_volume:/app/media
-    environment:
-      - SECRET_KEY=django-insecure-)!w7$7wxdo*5@db%t#s2914wn(-ucf!)945v%p+$uobt@_k_%j
-      - DEBUG=True
-      - ALLOWED_HOSTS=localhost,127.0.0.1
-      - EMAIL_HOST=smtp4dev
-      - EMAIL_PORT=25
-      - EMAIL_USE_TLS=False
-      - ALGORITHM=HS256
-      - SIGNING_KEY=django-insecure-)!w7$7wxdo*5@db%t#s2914wn(-ucf!)945v%p+$uobt@_k_%j
-      - CELERY_BROKER_URL=redis://redis:6379/1
-      - BAD_WORDS=word1,word2,word3
+    env_file:
+      - .env.stage
 
   celery_beat:
     build: .
@@ -59,58 +74,35 @@ services:
     command: celery -A core beat -l info
     restart: always
     depends_on:
-      - backend
-      - redis
+      backend:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - ./core:/app
-    environment:
-      - SECRET_KEY=django-insecure-)!w7$7wxdo*5@db%t#s2914wn(-ucf!)945v%p+$uobt@_k_%j
-      - DEBUG=True
-      - ALLOWED_HOSTS=localhost,127.0.0.1
-      - EMAIL_HOST=smtp4dev
-      - EMAIL_PORT=25
-      - EMAIL_USE_TLS=False
-      - ALGORITHM=HS256
-      - SIGNING_KEY=django-insecure-)!w7$7wxdo*5@db%t#s2914wn(-ucf!)945v%p+$uobt@_k_%j
-      - CELERY_BROKER_URL=redis://redis:6379/1
-      - BAD_WORDS=word1,word2,word3
+    env_file:
+      - .env.stage
+
   nginx:
     image: nginx:latest
     container_name: django_blog_nginx
     restart: always
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./nginx:/etc/nginx/conf.d
       - static_volume:/home/app/static
       - media_volume:/home/app/media
     depends_on:
-      - backend
-      - redis
-  smtp4dev:
-    image: rnwood/smtp4dev:v3
-    restart: always
-    ports:
-      # Change the number before : to the port the web interface should be accessible on
-      - '5000:80'
-      # Change the number before : to the port the SMTP server should be accessible on
-      - '25:25'
-      # Change the number before : to the port the IMAP server should be accessible on
-      - '143:143'
-    volumes:
-      # This is where smtp4dev stores the database..
-        - smtp4dev-data:/smtp4dev
-    environment:
-      # Uncomment to customise these settings
-      # This is not a complete list of the available settings.
-      # See the documentation in appsettings.json for a full list.
+      backend:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
-      #Specifies the URLs the web UI will use inside the container.
-      - ServerOptions__Urls=http://*:80
-
-      #Specifies the server hostname. Used in auto-generated TLS certificate if enabled.
-      - ServerOptions__HostName=smtp4dev
 volumes:
-  smtp4dev-data:
   static_volume:
   media_volume:
+  postgres_data:

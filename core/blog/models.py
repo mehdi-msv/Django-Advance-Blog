@@ -51,7 +51,7 @@ class Post(models.Model):
         snippet = " ".join(words[:10])
         return snippet + "..." if len(words) > 10 else snippet
 
-    def get_absolute_api_url(self):
+    def get_absolute_url(self):
         return reverse("blog:api-v1:post-detail", kwargs={"slug": self.slug})
     
     def __str__(self):
@@ -62,7 +62,7 @@ class Category(models.Model):
 
     name = models.CharField(max_length=50, unique=True)
 
-    def get_absolute_api_url(self):
+    def get_absolute_url(self):
         return reverse("blog:api-v1:category-detail", kwargs={"name": self.name})
     
     def __str__(self):

@@ -16,6 +16,8 @@ django-ckeditor
 
 # deployment modules
 gunicorn
+django-robots
+psycopg2
 
 # email third party modules
 django-mail-templated

@@ -16,7 +16,7 @@ class CategorySerializer(serializers.ModelSerializer):
         Return full absolute URL for the category's API endpoint.
         """
         request = self.context.get("request")
-        absolute_url = obj.get_absolute_api_url()
+        absolute_url = obj.get_absolute_url()
         return request.build_absolute_uri(absolute_url)
 
     def to_representation(self, instance):
@@ -91,7 +91,7 @@ class PostSerializer(serializers.ModelSerializer):
 
     def get_absolute_url(self, obj):
         request = self.context.get("request")
-        return request.build_absolute_uri(obj.get_absolute_api_url())
+        return request.build_absolute_uri(obj.get_absolute_url())
 
     def get_comments(self, obj):
         request = self.context.get("request")

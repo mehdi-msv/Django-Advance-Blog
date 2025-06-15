@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.shortcuts import redirect
 from django.contrib.auth.mixins import AccessMixin
 
-from core.settings import LOGIN_URL
+from core.settings.base import LOGIN_URL
 
 
 class CustomLoginRequiredMixin(AccessMixin):

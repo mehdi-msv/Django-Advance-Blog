@@ -160,3 +160,6 @@ cython_debug/
 #.idea/
 /core/.vscode
 /core/.devcontainer
+.env.development
+.env.production
+.env.stage

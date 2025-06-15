@@ -9,7 +9,7 @@ from django.utils.module_loading import import_string
 from .utils import SCOPE_CONFIG_MAP
 from .models import Profile
 from .models.throttle_records import ThrottleRecord
-
+from core.settings.base import EMAIL_HOST_USER
 
 User = get_user_model()
 
@@ -40,7 +40,7 @@ def send_verification_email(user_id):
         message = EmailMessage(
             "email/email-confirm.tpl",
             {"user": user, "token": token},
-            "mehdi.hunter.3242@gmail.com",
+            EMAIL_HOST_USER,
             to=[user.email],
         )
         message.send()
