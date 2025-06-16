@@ -9,7 +9,11 @@ def setup_periodic_tasks():
 
     # Task 1: Reset throttle levels daily at 1:00 AM
     throttle_reset_schedule, _ = CrontabSchedule.objects.get_or_create(
-        minute='0', hour='1', day_of_week='*', day_of_month='*', month_of_year='*'
+        minute="0",
+        hour="1",
+        day_of_week="*",
+        day_of_month="*",
+        month_of_year="*",
     )
     PeriodicTask.objects.update_or_create(
         name="Reset Throttle Levels",
@@ -22,7 +26,11 @@ def setup_periodic_tasks():
 
     # Task 2: Add monthly score to active users at 1:10 AM
     score_schedule, _ = CrontabSchedule.objects.get_or_create(
-        minute='10', hour='1', day_of_week='*', day_of_month='*', month_of_year='*'
+        minute="10",
+        hour="1",
+        day_of_week="*",
+        day_of_month="*",
+        month_of_year="*",
     )
     PeriodicTask.objects.update_or_create(
         name="Monthly Add Score to Active Users",

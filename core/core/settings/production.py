@@ -3,15 +3,19 @@
 # Production-specific settings (secure)
 # ==============================
 
-from .base import *
+from .base import *  # noqa: F403,F401
 
 
 DEBUG = config("DEBUG", cast=bool, default=False)
-ALLOWED_HOSTS = config("ALLOWED_HOSTS", cast=lambda v: [s.strip() for s in v.split(",")])
+ALLOWED_HOSTS = config(
+    "ALLOWED_HOSTS", cast=lambda v: [s.strip() for s in v.split(",")]
+)
 
 DATABASES = {
     "default": {
-        "ENGINE": config("DB_ENGINE", default="django.db.backends.postgresql"),
+        "ENGINE": config(
+            "DB_ENGINE", default="django.db.backends.postgresql"
+        ),
         "NAME": config("DB_NAME", default="POSTGRES_DB"),
         "USER": config("DB_USER", default="POSTGRES_USER"),
         "PASSWORD": config("DB_PASSWORD", default="POSTGRES_PASSWORD"),
@@ -20,7 +24,9 @@ DATABASES = {
     }
 }
 
-CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS", cast=lambda v: [s.strip() for s in v.split(",")])
+CORS_ALLOWED_ORIGINS = config(
+    "CORS_ALLOWED_ORIGINS", cast=lambda v: [s.strip() for s in v.split(",")]
+)
 
 # Security settings
 SECURE_HSTS_SECONDS = 31536000
@@ -31,7 +37,7 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY'
+X_FRAME_OPTIONS = "DENY"
 
 # Logging config for production:
 # - Only file-based logging

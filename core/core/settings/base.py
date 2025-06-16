@@ -79,10 +79,18 @@ WSGI_APPLICATION = "core.wsgi.application"
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"
+    },
 ]
 
 
@@ -144,10 +152,10 @@ REST_FRAMEWORK = {
         "rest_framework.throttling.UserRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {
-        "anon": "30/minute",          # For unauthenticated users
-        "user": "200/hour",           # For authenticated users
+        "anon": "30/minute",  # For unauthenticated users
+        "user": "200/hour",  # For authenticated users
     },
-    'NUM_PROXIES': 1,
+    "NUM_PROXIES": 1,
 }
 
 
@@ -160,13 +168,15 @@ SIMPLE_JWT = {
 
 
 # Celery configuration
-CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://redis:6379/1")
+CELERY_BROKER_URL = config(
+    "CELERY_BROKER_URL", default="redis://redis:6379/1"
+)
 CELERY_TIMEZONE = "Asia/Tehran"
 
 # Celery Beat configuration (Periodic tasks)
 CELERY_BEAT_SCHEDULER = config(
     "CELERY_BEAT_SCHEDULER",
-    default="django_celery_beat.schedulers.DatabaseScheduler"
+    default="django_celery_beat.schedulers.DatabaseScheduler",
 )
 
 
@@ -196,4 +206,6 @@ ROBOTS_USE_SITEMAP = True
 ROBOTS_SITEMAP_VIEW_NAME = "cached-sitemap"
 
 # If True, include scheme (http/https) in the Host header
-ROBOTS_USE_SCHEME_IN_HOST = config("ROBOTS_USE_SCHEME_IN_HOST", cast=bool, default=False)
+ROBOTS_USE_SCHEME_IN_HOST = config(
+    "ROBOTS_USE_SCHEME_IN_HOST", cast=bool, default=False
+)

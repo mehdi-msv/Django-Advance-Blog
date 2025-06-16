@@ -9,7 +9,7 @@ from .forms import PostForm
 class PostAdmin(admin.ModelAdmin):
     #   Define the fields to be displayed in the admin interface
     form = PostForm
-    
+
     list_display = (
         "title",
         "author",
@@ -21,9 +21,11 @@ class PostAdmin(admin.ModelAdmin):
     list_filter = ("author", "category", "status", "published_date")
     search_fields = ("title", "author__email", "category__name", "content")
     ordering = ("-published_date",)
-    
 
-@admin.action(description="Delete selected comments and decrease author score by 25")
+
+@admin.action(
+    description="Delete selected comments and decrease author score by 25"
+)
 def confirm_and_delete_comments(modeladmin, request, queryset):
     for comment in queryset:
         comment.author.decrease_score(25)
@@ -32,10 +34,16 @@ def confirm_and_delete_comments(modeladmin, request, queryset):
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ("author", "post", "is_approved","is_hidden", "report_count", "is_flagged_by_system")
+    list_display = (
+        "author",
+        "post",
+        "is_approved",
+        "is_hidden",
+        "report_count",
+        "is_flagged_by_system",
+    )
     list_filter = ("is_hidden", "is_flagged_by_system", "is_approved")
     actions = [confirm_and_delete_comments]
-
 
 
 admin.site.register(Category)

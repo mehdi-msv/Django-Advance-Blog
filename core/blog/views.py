@@ -4,11 +4,9 @@ from django.views.generic import (
     CreateView,
     UpdateView,
     DeleteView,
-    FormView
+    FormView,
 )
-from django.contrib.auth.mixins import (
-    PermissionRequiredMixin
-)
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.utils import timezone
 from django.urls import reverse
 from django.views import View
@@ -21,6 +19,7 @@ from .tasks import create_comment_task
 from .models import Post, Comment, CommentReport, Category
 from .forms import PostForm, CommentForm
 from .permissions import VerifiedUserRequiredMixin, CustomLoginRequiredMixin
+
 # Create your views here.
 
 
@@ -28,17 +27,18 @@ class PostListView(ListView):
     """
     Displays a list of blog posts with filtering and pagination.
     """
+
     model = Post
-    context_object_name = 'posts'
-    template_name = 'blog/post_list.html'
+    context_object_name = "posts"
+    template_name = "blog/post_list.html"
     paginate_by = 3
-    ordering = ['-published_date']
+    ordering = ["-published_date"]
 
     def get_queryset(self):
         # Build a cache key based on page number, search term, and selected category
-        page = self.request.GET.get('page', 1)
-        search_query = self.request.GET.get('search', '').strip()
-        category_name = self.request.GET.get('category', '').strip()
+        page = self.request.GET.get("page", 1)
+        search_query = self.request.GET.get("search", "").strip()
+        category_name = self.request.GET.get("category", "").strip()
         cache_key = f"cached_posts_page_{page}_search_{search_query}_cat_{category_name}"
 
         # Try to retrieve the filtered queryset from cache
@@ -51,9 +51,8 @@ class PostListView(ListView):
 
         # If a search term is provided, filter by title or content (case-insensitive)
         if search_query:
-            base_filter &= (
-                Q(title__icontains=search_query) |
-                Q(content__icontains=search_query)
+            base_filter &= Q(title__icontains=search_query) | Q(
+                content__icontains=search_query
             )
 
         # If a category is selected, filter by that category's name
@@ -61,7 +60,11 @@ class PostListView(ListView):
             base_filter &= Q(category__name=category_name)
 
         # Execute the final query, order by newest first, and remove duplicates
-        queryset = Post.objects.filter(base_filter).order_by('-published_date').distinct()
+        queryset = (
+            Post.objects.filter(base_filter)
+            .order_by("-published_date")
+            .distinct()
+        )
 
         # Store the result in cache for 10 minutes (tweak as needed)
         cache.set(cache_key, queryset, 60 * 10)
@@ -71,11 +74,11 @@ class PostListView(ListView):
         context = super().get_context_data(**kwargs)
 
         # Pass the current search and category parameters to the template for form pre-filling
-        context['search_query'] = self.request.GET.get('search', '')
-        context['selected_category'] = self.request.GET.get('category', '')
+        context["search_query"] = self.request.GET.get("search", "")
+        context["selected_category"] = self.request.GET.get("category", "")
 
         # Provide the full list of categories for the dropdown
-        context['categories'] = Category.objects.all()
+        context["categories"] = Category.objects.all()
         return context
 
 
@@ -84,8 +87,10 @@ class PostDetailView(CustomLoginRequiredMixin, DetailView):
     Displays the detail page of a single post.
     Only accessible to logged-in users.
     """
-    
-    context_object_name = "post"  # Use 'post' instead of default 'object' in the template
+
+    context_object_name = (
+        "post"  # Use 'post' instead of default 'object' in the template
+    )
 
     def get_context_data(self, **kwargs):
         """
@@ -96,11 +101,10 @@ class PostDetailView(CustomLoginRequiredMixin, DetailView):
 
         # Get approved comments for this post
         context["comments"] = Comment.objects.filter(
-            post=post,
-            parent__isnull=True,
-            is_hidden=False,
-            is_approved=True
-        ).prefetch_related("replies")  # Optimize for nested replies
+            post=post, parent__isnull=True, is_hidden=False, is_approved=True
+        ).prefetch_related(
+            "replies"
+        )  # Optimize for nested replies
 
         # Provide a comment form with pre-filled post reference
         context["form"] = CommentForm(initial={"post": post})
@@ -109,12 +113,13 @@ class PostDetailView(CustomLoginRequiredMixin, DetailView):
     def get_queryset(self):
         return Post.objects.filter(
             Q(status=True, published_date__lte=timezone.now())
-            |
-            Q(author=self.request.user.profile)
+            | Q(author=self.request.user.profile)
         ).distinct()
 
 
-class CommentCreateView(CustomLoginRequiredMixin, VerifiedUserRequiredMixin, FormView):
+class CommentCreateView(
+    CustomLoginRequiredMixin, VerifiedUserRequiredMixin, FormView
+):
     """
     Handles creation of new comments using a Django FormView.
     Only logged-in and verified users can post comments.
@@ -122,7 +127,7 @@ class CommentCreateView(CustomLoginRequiredMixin, VerifiedUserRequiredMixin, For
     """
 
     form_class = CommentForm
-    http_method_names = ['post']  # Only allow POST requests
+    http_method_names = ["post"]  # Only allow POST requests
 
     def form_valid(self, form):
         """
@@ -135,7 +140,10 @@ class CommentCreateView(CustomLoginRequiredMixin, VerifiedUserRequiredMixin, For
         parent_id = self.request.POST.get("parent") or None
 
         create_comment_task.delay(post_slug, profile_id, text, parent_id)
-        messages.success(self.request, "Your comment has been submitted and is awaiting approval.")
+        messages.success(
+            self.request,
+            "Your comment has been submitted and is awaiting approval.",
+        )
         return redirect("blog:post-detail", slug=post_slug)
 
     def form_invalid(self, form):
@@ -143,11 +151,16 @@ class CommentCreateView(CustomLoginRequiredMixin, VerifiedUserRequiredMixin, For
         Called when the submitted form is invalid.
         Displays an error message and redirects back to the post detail page.
         """
-        messages.error(self.request, "There was an error submitting your comment. Please check the form and try again.")
+        messages.error(
+            self.request,
+            "There was an error submitting your comment. Please check the form and try again.",
+        )
         return redirect("blog:post-detail", slug=self.kwargs.get("slug"))
 
 
-class CommentReportView(CustomLoginRequiredMixin, VerifiedUserRequiredMixin, View):
+class CommentReportView(
+    CustomLoginRequiredMixin, VerifiedUserRequiredMixin, View
+):
     """
     Allows users to report inappropriate comments.
     Prevents duplicate reports and self-reporting.
@@ -162,19 +175,27 @@ class CommentReportView(CustomLoginRequiredMixin, VerifiedUserRequiredMixin, Vie
             messages.warning(request, "You cannot report your own comment.")
         else:
             # Check if the user has already reported this comment
-            already_reported = CommentReport.objects.filter(user=user_profile, comment=comment).exists()
+            already_reported = CommentReport.objects.filter(
+                user=user_profile, comment=comment
+            ).exists()
             if not already_reported:
                 # Create a new report and trigger any report-related logic
-                CommentReport.objects.create(user=user_profile, comment=comment)
+                CommentReport.objects.create(
+                    user=user_profile, comment=comment
+                )
                 comment.report()  # increments a report count and decreases the author's score
                 messages.success(request, "Report submitted successfully.")
             else:
-                messages.info(request, "You have already reported this comment.")
+                messages.info(
+                    request, "You have already reported this comment."
+                )
 
         return redirect("blog:post-detail", slug=comment.post.slug)
 
 
-class PostCreateView(CustomLoginRequiredMixin, PermissionRequiredMixin, CreateView):
+class PostCreateView(
+    CustomLoginRequiredMixin, PermissionRequiredMixin, CreateView
+):
     """
     View to allow authorized users to create a new blog post.
     Only users with the 'blog.add_post' permission are allowed.
@@ -193,7 +214,9 @@ class PostCreateView(CustomLoginRequiredMixin, PermissionRequiredMixin, CreateVi
         Redirects to the post list with an error message if permission is denied.
         """
         if not request.user.has_perm(self.permission_required):
-            messages.error(request, "You do not have permission to access this page.")
+            messages.error(
+                request, "You do not have permission to access this page."
+            )
             return redirect("blog:post-list")
         return super().dispatch(request, *args, **kwargs)
 
@@ -204,18 +227,25 @@ class PostCreateView(CustomLoginRequiredMixin, PermissionRequiredMixin, CreateVi
         """
         new_category = self.request.POST.get("new_category")
         if new_category:
-            category_obj, _ = Category.objects.get_or_create(name=new_category)
+            category_obj, _ = Category.objects.get_or_create(
+                name=new_category
+            )
             form.instance.category = category_obj
 
         form.instance.author = Profile.objects.get(user=self.request.user)
-        messages.success(self.request, "Your post has been created successfully.")
+        messages.success(
+            self.request, "Your post has been created successfully."
+        )
         return super().form_valid(form)
 
     def form_invalid(self, form):
         """
         Handle invalid form submission with an error message.
         """
-        messages.error(self.request, "An error occurred while creating the post. Please review the form and try again.")
+        messages.error(
+            self.request,
+            "An error occurred while creating the post. Please review the form and try again.",
+        )
         return super().form_invalid(form)
 
     def get_success_url(self):
@@ -230,6 +260,7 @@ class PostEditView(CustomLoginRequiredMixin, UpdateView):
     A class-based view to edit an existing post.
     Only accessible to the author of the post.
     """
+
     model = Post
     form_class = PostForm
     template_name = "blog/post_edit.html"
@@ -252,7 +283,10 @@ class PostEditView(CustomLoginRequiredMixin, UpdateView):
         Called when the submitted form is invalid.
         Shows an error message.
         """
-        messages.error(self.request, "There was an error updating the post. Please try again.")
+        messages.error(
+            self.request,
+            "There was an error updating the post. Please try again.",
+        )
         return super().form_invalid(form)
 
     def get_success_url(self):
@@ -267,8 +301,8 @@ class PostDeleteView(CustomLoginRequiredMixin, DeleteView):
     """
 
     model = Post
-    http_method_names = ['post']  # Only allow POST requests
-    
+    http_method_names = ["post"]  # Only allow POST requests
+
     def get_queryset(self):
         # Only allow deletion of posts owned by the logged-in user
         return Post.objects.filter(author__user=self.request.user)
@@ -278,9 +312,11 @@ class PostDeleteView(CustomLoginRequiredMixin, DeleteView):
         Override the default delete method to add a success message.
         """
         post = self.get_object()
-        messages.success(request, f"Post '{post.title}' was successfully deleted.")
+        messages.success(
+            request, f"Post '{post.title}' was successfully deleted."
+        )
         return super().delete(request, *args, **kwargs)
-    
+
     def get_success_url(self):
         """
         Redirect to the user's profile page upon successful post deletion.

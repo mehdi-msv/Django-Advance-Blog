@@ -1,8 +1,10 @@
 """
 Advanced test suite for the PostViewSet in the blog app.
 """
+
 import pytest
 from django.urls import reverse
+
 
 @pytest.mark.django_db
 def test_post_list_authenticated(authenticated_client):
@@ -12,6 +14,7 @@ def test_post_list_authenticated(authenticated_client):
     url = reverse("blog:post-list")
     response = authenticated_client.get(url)
     assert response.status_code == 200
+
 
 @pytest.mark.django_db
 def test_post_list_unauthenticated(api_client):

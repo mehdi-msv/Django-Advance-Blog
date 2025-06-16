@@ -32,7 +32,12 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("ident", models.CharField(help_text="User ID or IP", max_length=255)),
+                (
+                    "ident",
+                    models.CharField(
+                        help_text="User ID or IP", max_length=255
+                    ),
+                ),
                 (
                     "scope",
                     models.CharField(
@@ -50,7 +55,8 @@ class Migration(migrations.Migration):
                 "ordering": ["-updated_at"],
                 "indexes": [
                     models.Index(
-                        fields=["ident", "scope"], name="accounts_th_ident_3e2170_idx"
+                        fields=["ident", "scope"],
+                        name="accounts_th_ident_3e2170_idx",
                     )
                 ],
                 "unique_together": {("ident", "scope")},

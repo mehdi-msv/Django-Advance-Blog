@@ -43,12 +43,12 @@ class CustomAuthTokenSerializer(serializers.Serializer):
             if not user:
                 raise serializers.ValidationError(
                     _("Unable to log in with provided credentials."),
-                    code="authorization"
+                    code="authorization",
                 )
         else:
             raise serializers.ValidationError(
                 _('Must include "email" and "password".'),
-                code="authorization"
+                code="authorization",
             )
 
         attrs["user"] = user
@@ -59,6 +59,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
     """
     Serializer for user registration. Validates matching passwords and enforces password strength.
     """
+
     password1 = serializers.CharField(
         max_length=255, write_only=True, help_text="Password confirmation."
     )
@@ -75,7 +76,9 @@ class RegistrationSerializer(serializers.ModelSerializer):
         Ensure both passwords match and validate password strength.
         """
         if attrs["password"] != attrs["password1"]:
-            raise serializers.ValidationError({"password": "Passwords must match."})
+            raise serializers.ValidationError(
+                {"password": "Passwords must match."}
+            )
 
         try:
             validate_password(attrs["password"])
@@ -136,6 +139,7 @@ class ChangePasswordSerializer(serializers.Serializer):
     - Password confirmation match
     - Password complexity via Django validators
     """
+
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
     confirm_password = serializers.CharField(required=True)
@@ -145,29 +149,33 @@ class ChangePasswordSerializer(serializers.Serializer):
 
         # Check if old password is correct
         if not user.check_password(attrs["old_password"]):
-            raise serializers.ValidationError({
-                "old_password": _("Incorrect old password.")
-            })
+            raise serializers.ValidationError(
+                {"old_password": _("Incorrect old password.")}
+            )
 
         # Prevent using the same password again
         if attrs["old_password"] == attrs["new_password"]:
-            raise serializers.ValidationError({
-                "new_password": _("New password cannot be the same as the old password.")
-            })
+            raise serializers.ValidationError(
+                {
+                    "new_password": _(
+                        "New password cannot be the same as the old password."
+                    )
+                }
+            )
 
         # Check if new password and confirmation match
         if attrs["new_password"] != attrs["confirm_password"]:
-            raise serializers.ValidationError({
-                "confirm_password": _("Passwords do not match.")
-            })
+            raise serializers.ValidationError(
+                {"confirm_password": _("Passwords do not match.")}
+            )
 
         # Validate new password using Django's built-in validators
         try:
             validate_password(attrs["new_password"], user)
         except exceptions.ValidationError as e:
-            raise serializers.ValidationError({
-                "new_password": list(e.messages)
-            })
+            raise serializers.ValidationError(
+                {"new_password": list(e.messages)}
+            )
 
         return attrs
 
@@ -181,18 +189,28 @@ class ProfileSerializer(serializers.ModelSerializer):
     Serializer for user profile.
     Includes validation for first and last names to contain only letters and spaces.
     """
+
     email = serializers.EmailField(source="user.email", read_only=True)
 
     class Meta:
         model = Profile
-        fields = ["id", "email", "first_name", "last_name", "description", "image"]
+        fields = [
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "description",
+            "image",
+        ]
 
     def validate_first_name(self, value):
         """
         Ensure the first name contains only alphabetic characters and spaces.
         """
         if not name_regex.match(value):
-            raise serializers.ValidationError("First name must contain only letters and spaces.")
+            raise serializers.ValidationError(
+                "First name must contain only letters and spaces."
+            )
         return value
 
     def validate_last_name(self, value):
@@ -200,7 +218,9 @@ class ProfileSerializer(serializers.ModelSerializer):
         Ensure the last name contains only alphabetic characters and spaces.
         """
         if not name_regex.match(value):
-            raise serializers.ValidationError("Last name must contain only letters and spaces.")
+            raise serializers.ValidationError(
+                "Last name must contain only letters and spaces."
+            )
         return value
 
 
@@ -209,6 +229,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     Serializer for confirming password reset.
     Uses Django's built-in password validators to ensure password strength.
     """
+
     new_password1 = serializers.CharField(write_only=True)
     new_password2 = serializers.CharField(write_only=True)
 
@@ -216,8 +237,8 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         """
         Ensure both entered passwords match and meet Django's password strength requirements.
         """
-        password1 = attrs.get('new_password1')
-        password2 = attrs.get('new_password2')
+        password1 = attrs.get("new_password1")
+        password2 = attrs.get("new_password2")
 
         if password1 != password2:
             raise serializers.ValidationError("Passwords do not match.")
@@ -225,7 +246,9 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         try:
             validate_password(password1)
         except DjangoValidationError as e:
-            raise serializers.ValidationError({'new_password1': list(e.messages)})
+            raise serializers.ValidationError(
+                {"new_password1": list(e.messages)}
+            )
 
         return attrs
 
@@ -233,5 +256,5 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         """
         Set the new password for the given user.
         """
-        user.set_password(self.validated_data['new_password1'])
+        user.set_password(self.validated_data["new_password1"])
         user.save()

@@ -12,3 +12,5 @@ exclude =
 ignore =
     E501
     W293
+    W503
+    F405

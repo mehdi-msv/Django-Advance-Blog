@@ -34,5 +34,4 @@ def test_registration_serializer_duplicate_email(test_user, user_data):
     data = user_data.copy()
     data["password1"] = data["password"]
     serializer = RegistrationSerializer(data=data)
-    assert not serializer.is_valid() or 'email' in serializer.errors
-
+    assert not serializer.is_valid() or "email" in serializer.errors

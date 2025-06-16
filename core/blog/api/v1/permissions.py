@@ -12,5 +12,6 @@ class HasAddPostPermission(permissions.BasePermission):
     """
     Allows access only to users with the 'blog.add_post' permission.
     """
+
     def has_permission(self, request, view):
         return request.user.has_perm("blog.add_post")

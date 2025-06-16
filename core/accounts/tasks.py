@@ -28,7 +28,7 @@ def send_verification_email(user_id):
         access_token = refresh.access_token
 
         # Add a custom claim to clarify the purpose of the token
-        access_token['purpose'] = 'email_verification'
+        access_token["purpose"] = "email_verification"
 
         # Set token expiration to 1 day for email verification
         access_token.set_exp(lifetime=timedelta(days=1))
@@ -48,6 +48,7 @@ def send_verification_email(user_id):
         # If user not found, silently ignore
         pass
 
+
 @shared_task
 def send_password_reset_email(user_id):
     """
@@ -62,7 +63,7 @@ def send_password_reset_email(user_id):
         access_token = refresh.access_token
 
         # Add a custom claim to clarify the purpose of the token
-        access_token['purpose'] = 'password_reset'
+        access_token["purpose"] = "password_reset"
 
         # Set token expiration to 10 minutes for email verification
         access_token.set_exp(lifetime=timedelta(minutes=10))
@@ -82,6 +83,7 @@ def send_password_reset_email(user_id):
         # If user not found, silently ignore
         pass
 
+
 @shared_task
 def monthly_add_score():
     """
@@ -94,13 +96,14 @@ def monthly_add_score():
         user__created_date__lte=now - one_month,
         last_score_update__lte=now - one_month,
         user__is_verified=True,
-        score__lt=100
-    ).select_related('user')
+        score__lt=100,
+    ).select_related("user")
 
     for profile in profiles:
         profile.score = min(profile.score + 10, 100)
         profile.last_score_update = now
         profile.save()
+
 
 @shared_task
 def clear_throttle_after_grace():
@@ -128,11 +131,13 @@ def clear_throttle_after_grace():
                 continue  # Invalid path, skip
 
         # Try to get base_window from class attribute
-        base_window = getattr(scope_config, "throttle_base_window", None) or getattr(scope_config, "base_window", None)
+        base_window = getattr(
+            scope_config, "throttle_base_window", None
+        ) or getattr(scope_config, "base_window", None)
         if base_window is None:
             continue  # Skip if not defined
 
-        cooldown = base_window * (2 ** record.level)
+        cooldown = base_window * (2**record.level)
         grace_period = timedelta(seconds=cooldown * 2)
 
         if record.last_blocked_at + grace_period < now:

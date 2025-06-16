@@ -1,9 +1,11 @@
 """
 Advanced test suite for the Post serializer in the blog app.
 """
+
 import pytest
 from blog.api.v1.serializers import PostSerializer
 from django.utils import timezone
+
 
 @pytest.mark.django_db
 def test_post_serializer_valid(test_user, test_category, rf):
@@ -23,6 +25,7 @@ def test_post_serializer_valid(test_user, test_category, rf):
     serializer = PostSerializer(data=data, context={"request": request})
     assert serializer.is_valid(), serializer.errors
 
+
 @pytest.mark.django_db
 def test_post_serializer_invalid():
     """
@@ -30,6 +33,7 @@ def test_post_serializer_invalid():
     """
     serializer = PostSerializer(data={})
     assert not serializer.is_valid()
+
 
 @pytest.mark.django_db
 def test_post_serializer_missing_fields(test_user):

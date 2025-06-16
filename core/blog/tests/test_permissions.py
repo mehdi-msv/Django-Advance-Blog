@@ -1,12 +1,16 @@
 """
 Advanced test suite for custom permissions in the blog app.
 """
+
 import pytest
 from django.urls import reverse
 
+
 @pytest.mark.django_db
 @pytest.mark.parametrize("method", ["put", "patch"])
-def test_owner_can_patch_post_title(authenticated_client, test_user, test_post, method):
+def test_owner_can_patch_post_title(
+    authenticated_client, test_user, test_post, method
+):
     """
     Ensure that the owner can successfully perform a partial update (PATCH)
     to modify only the title of their own post.
@@ -31,7 +35,9 @@ def test_owner_can_patch_post_title(authenticated_client, test_user, test_post, 
             "category_id": post.category.id,
         }
     # Owner updates the title
-    response = getattr(authenticated_client, method)(url, data=updated_data, format="json")
+    response = getattr(authenticated_client, method)(
+        url, data=updated_data, format="json"
+    )
 
     assert response.status_code == 200
     post.refresh_from_db()
@@ -39,7 +45,9 @@ def test_owner_can_patch_post_title(authenticated_client, test_user, test_post, 
 
 
 @pytest.mark.django_db
-def test_non_owner_can_read_but_cannot_update(api_client, test_post, django_user_model):
+def test_non_owner_can_read_but_cannot_update(
+    api_client, test_post, django_user_model
+):
     """
     Non-owner should be able to read the post (GET), but not update it (PATCH).
     """
@@ -58,9 +66,7 @@ def test_non_owner_can_read_but_cannot_update(api_client, test_post, django_user
 
     # Non-owner tries to update the post
     response = api_client.patch(
-        url,
-        {"title": updated_title},
-        content_type="application/json"
+        url, {"title": updated_title}, content_type="application/json"
     )
 
     assert response.status_code == 404

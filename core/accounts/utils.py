@@ -17,12 +17,15 @@ class CustomThrottleException(Throttled):
     - Extends DRF's Throttled exception.
     - Returns user-friendly message and retry_after value.
     """
+
     def __init__(self, wait=None):
         formatted = AdaptiveDBThrottle.format_duration(wait)
-        super().__init__(detail={
-            "detail": f"Too many requests. Try again in {formatted}.",
-            "retry_after": wait
-        })
+        super().__init__(
+            detail={
+                "detail": f"Too many requests. Try again in {formatted}.",
+                "retry_after": wait,
+            }
+        )
 
 
 class AdaptiveDBThrottle(BaseThrottle):
@@ -38,11 +41,19 @@ class AdaptiveDBThrottle(BaseThrottle):
         Initialize throttle instance with configurable behavior.
         """
         cls = self.__class__
-        self.scope = getattr(self, 'scope', getattr(cls, 'scope', None))
-        self.allowed_attempts = getattr(self, 'allowed_attempts', getattr(cls, 'allowed_attempts', 5))
-        self.base_window = getattr(self, 'base_window', getattr(cls, 'base_window', 3600))
-        self.max_level = getattr(self, 'max_level', getattr(cls, 'max_level', 10))
-        self.reset_threshold = getattr(self, 'reset_threshold', getattr(cls, 'reset_threshold', 5))
+        self.scope = getattr(self, "scope", getattr(cls, "scope", None))
+        self.allowed_attempts = getattr(
+            self, "allowed_attempts", getattr(cls, "allowed_attempts", 5)
+        )
+        self.base_window = getattr(
+            self, "base_window", getattr(cls, "base_window", 3600)
+        )
+        self.max_level = getattr(
+            self, "max_level", getattr(cls, "max_level", 10)
+        )
+        self.reset_threshold = getattr(
+            self, "reset_threshold", getattr(cls, "reset_threshold", 5)
+        )
         self.ident = None
         self.now = None
         self.record = None
@@ -63,16 +74,20 @@ class AdaptiveDBThrottle(BaseThrottle):
         self._init_context(request)
 
         try:
-            self.record = ThrottleRecord.objects.get(ident=self.ident, scope=self.scope)
+            self.record = ThrottleRecord.objects.get(
+                ident=self.ident, scope=self.scope
+            )
         except ThrottleRecord.DoesNotExist:
             return True  # First-time access — no restrictions
 
         if self.record.expires_at > self.now:
-            wait_time = int((self.record.expires_at - self.now).total_seconds())
+            wait_time = int(
+                (self.record.expires_at - self.now).total_seconds()
+            )
             raise CustomThrottleException(wait=wait_time)
 
         if self.record.attempts >= self.allowed_attempts:
-            cooldown = self.base_window * (2 ** self.record.level)
+            cooldown = self.base_window * (2**self.record.level)
             self.record.level = min(self.record.level + 1, self.max_level)
             self.record.attempts = 0  # Reset after penalty
             self.record.expires_at = self.now + timedelta(seconds=cooldown)
@@ -92,7 +107,7 @@ class AdaptiveDBThrottle(BaseThrottle):
         record, created = ThrottleRecord.objects.get_or_create(
             ident=self.ident,
             scope=self.scope,
-            defaults={"level": 0, "expires_at": self.now, "attempts": 1}
+            defaults={"level": 0, "expires_at": self.now, "attempts": 1},
         )
 
         if not created and record.expires_at <= self.now:
@@ -106,7 +121,9 @@ class AdaptiveDBThrottle(BaseThrottle):
         self._init_context(request)
 
         try:
-            record = ThrottleRecord.objects.get(ident=self.ident, scope=self.scope)
+            record = ThrottleRecord.objects.get(
+                ident=self.ident, scope=self.scope
+            )
             if record.level >= self.reset_threshold:
                 record.delete()
         except ThrottleRecord.DoesNotExist:
@@ -129,7 +146,7 @@ class AdaptiveDBThrottle(BaseThrottle):
         if seconds or not parts:
             parts.append(f"{seconds}s")
 
-        return ' '.join(parts)
+        return " ".join(parts)
 
 
 class APIRegisterThrottle(AdaptiveDBThrottle):
@@ -137,7 +154,8 @@ class APIRegisterThrottle(AdaptiveDBThrottle):
     Throttle for API user registration endpoint.
     Limits to 5 attempts every 10 minutes, with exponential backoff and reset after 3 penalty levels.
     """
-    scope = 'api_register'
+
+    scope = "api_register"
     base_window = 60 * 10
     max_level = 10
     reset_threshold = 3
@@ -149,7 +167,8 @@ class APIResetPasswordThrottle(AdaptiveDBThrottle):
     Throttle for API password reset endpoint.
     Allows only 2 attempts every 5 minutes, with exponential cooldown and reset after 3 penalty levels.
     """
-    scope = 'api_reset_password'
+
+    scope = "api_reset_password"
     base_window = 60 * 5
     max_level = 10
     reset_threshold = 3
@@ -161,7 +180,8 @@ class APIChangePasswordThrottle(AdaptiveDBThrottle):
     Throttle for authenticated password change endpoint.
     Permits 5 attempts every 10 minutes, with a lower max penalty level of 5 and reset threshold 3.
     """
-    scope = 'api_change_password'
+
+    scope = "api_change_password"
     base_window = 60 * 10
     max_level = 5
     reset_threshold = 3
@@ -173,7 +193,8 @@ class APIVerificationResendThrottle(AdaptiveDBThrottle):
     Throttle for resending email verification endpoint.
     Limits resends to 3 attempts every 5 minutes, with max penalty level 5 and reset threshold 3.
     """
-    scope = 'api_resend_verification'
+
+    scope = "api_resend_verification"
     base_window = 60 * 5
     max_level = 5
     reset_threshold = 3
@@ -205,7 +226,9 @@ class ThrottleMixin:
         Return the configured scope or raise error.
         """
         if not self.throttle_scope:
-            raise NotImplementedError("You must define `throttle_scope` in your view.")
+            raise NotImplementedError(
+                "You must define `throttle_scope` in your view."
+            )
         return self.throttle_scope
 
     def get_throttle_redirect_url(self):
@@ -222,11 +245,11 @@ class ThrottleMixin:
         Raises ImproperlyConfigured if required settings are missing.
         """
         required_attrs = [
-            'throttle_scope',
-            'throttle_allowed_attempts',
-            'throttle_base_window',
-            'throttle_max_level',
-            'throttle_reset_threshold'
+            "throttle_scope",
+            "throttle_allowed_attempts",
+            "throttle_base_window",
+            "throttle_max_level",
+            "throttle_reset_threshold",
         ]
 
         for attr in required_attrs:
@@ -250,8 +273,12 @@ class ThrottleMixin:
         try:
             self.throttle.allow_request(request, self)
         except CustomThrottleException as e:
-            retry_after = self.throttle.format_duration(e.detail["retry_after"])
-            messages.error(request, f"Too many requests! Try again in {retry_after}.")
+            retry_after = self.throttle.format_duration(
+                e.detail["retry_after"]
+            )
+            messages.error(
+                request, f"Too many requests! Try again in {retry_after}."
+            )
             return redirect(self.get_throttle_redirect_url())
 
         return super().dispatch(request, *args, **kwargs)

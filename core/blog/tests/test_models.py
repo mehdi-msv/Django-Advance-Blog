@@ -1,8 +1,10 @@
 """
 Advanced test suite for the Post and Category models in the blog app.
 """
+
 import pytest
 from django.utils import timezone
+
 
 @pytest.mark.django_db
 def test_create_category(test_category):
@@ -10,6 +12,7 @@ def test_create_category(test_category):
     Test creating a new category instance using the shared fixture.
     """
     assert test_category.name == "Test Category"
+
 
 @pytest.mark.django_db
 def test_create_post(test_post, test_user, test_category):
@@ -23,6 +26,7 @@ def test_create_post(test_post, test_user, test_category):
     assert post.category == test_category
     assert post.status is True
     assert post.published_date <= timezone.now()
+
 
 @pytest.mark.django_db
 def test_post_snippet(test_post):

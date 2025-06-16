@@ -61,13 +61,14 @@ class CommentSerializer(serializers.ModelSerializer):
 class PostSerializer(serializers.ModelSerializer):
     """
     Serializer for Post model.
-    
+
     - Shows author as full name or email.
     - Shows category name instead of ID.
     - Allows write-only category_id for create/update.
     - Hides content and comments in list view.
     - Adds relative and absolute URLs.
     """
+
     category = serializers.SerializerMethodField(read_only=True)
     category_id = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(), write_only=True, source="category"
@@ -80,9 +81,17 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = [
-            "title", "image", "snippet", "content", "author", 
-            "category", "category_id", "status",
-            "published_date", "absolute_url", "comments"
+            "title",
+            "image",
+            "snippet",
+            "content",
+            "author",
+            "category",
+            "category_id",
+            "status",
+            "published_date",
+            "absolute_url",
+            "comments",
         ]
         read_only_fields = ["author"]
 
@@ -97,7 +106,10 @@ class PostSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         if request and request.parser_context.get("kwargs", {}).get("slug"):
             qs = Comment.objects.filter(
-                post=obj, parent__isnull=True, is_hidden=False, is_approved=True
+                post=obj,
+                parent__isnull=True,
+                is_hidden=False,
+                is_approved=True,
             ).prefetch_related("replies")
             return CommentSerializer(qs, many=True).data
         return None
@@ -115,7 +127,10 @@ class PostSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         request = self.context.get("request")
         validated_data["author"] = Profile.objects.get(user=request.user)
-        if "image" not in validated_data or validated_data["image"] in [None, ""]:
+        if "image" not in validated_data or validated_data["image"] in [
+            None,
+            "",
+        ]:
             validated_data["image"] = "defaults/default_post.png"
         return super().create(validated_data)
 

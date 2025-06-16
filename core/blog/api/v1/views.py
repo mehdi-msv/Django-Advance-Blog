@@ -34,7 +34,11 @@ class PostModelViewSet(ModelViewSet):
     pagination_class = PostsPagination
     lookup_field = "slug"
 
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    ]
     filterset_fields = ["category__name"]
     search_fields = ["author_full_name", "title", "content"]
     ordering_fields = ["published_date"]
@@ -58,14 +62,20 @@ class PostModelViewSet(ModelViewSet):
             if cached:
                 return cached
 
-            filtered = queryset.filter(status=True, published_date__lte=timezone.now())
-            cache.set(cache_key, filtered, timeout=600)  # Cache for 10 minutes
+            filtered = queryset.filter(
+                status=True, published_date__lte=timezone.now()
+            )
+            cache.set(
+                cache_key, filtered, timeout=600
+            )  # Cache for 10 minutes
             return filtered
 
         if self.action == "retrieve":
             return queryset.filter(
-                Q(status=True, published_date__lte=timezone.now()) |
-                Q(author__user=user)
+                (
+                    Q(status=True, published_date__lte=timezone.now())
+                    | Q(author__user=user)
+                )
             )
 
         # Restrict update/delete to user's own posts
@@ -76,7 +86,9 @@ class PostModelViewSet(ModelViewSet):
             return [HasAddPostPermission()]
         return super().get_permissions()
 
-    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
+    @action(
+        detail=True, methods=["post"], permission_classes=[IsAuthenticated]
+    )
     def comment(self, request, slug=None):
         """
         Submit a comment asynchronously via Celery.
@@ -96,7 +108,9 @@ class PostModelViewSet(ModelViewSet):
             status=status.HTTP_202_ACCEPTED,
         )
 
-    @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
+    @action(
+        detail=False, methods=["post"], permission_classes=[IsAuthenticated]
+    )
     def report_comment(self, request):
         """
         Report a comment by ID.
@@ -107,7 +121,10 @@ class PostModelViewSet(ModelViewSet):
         try:
             comment = Comment.objects.get(pk=comment_id)
         except Comment.DoesNotExist:
-            return Response({"detail": "Comment not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Comment not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         if comment.author == request.user.profile:
             return Response(
@@ -115,15 +132,21 @@ class PostModelViewSet(ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if CommentReport.objects.filter(user=request.user.profile, comment=comment).exists():
+        if CommentReport.objects.filter(
+            user=request.user.profile, comment=comment
+        ).exists():
             return Response(
                 {"detail": "You have already reported this comment."},
                 status=status.HTTP_200_OK,
             )
 
-        CommentReport.objects.create(user=request.user.profile, comment=comment)
+        CommentReport.objects.create(
+            user=request.user.profile, comment=comment
+        )
         comment.report()  # Increase report count or trigger logic
-        return Response({"detail": "Report submitted."}, status=status.HTTP_201_CREATED)
+        return Response(
+            {"detail": "Report submitted."}, status=status.HTTP_201_CREATED
+        )
 
 
 class CategoryModelViewSet(ModelViewSet):
@@ -132,6 +155,7 @@ class CategoryModelViewSet(ModelViewSet):
     Supports list, create, retrieve, update, and delete operations.
     Access restricted to admin users.
     """
+
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [IsAdminUser]

@@ -8,11 +8,21 @@ urlpatterns = [
     path(
         "post/<str:slug>/", views.PostDetailView.as_view(), name="post-detail"
     ),
-    path("post/<str:slug>/comment/", views.CommentCreateView.as_view(), name="post-comment"),
-    path("comment/<int:pk>/report/", views.CommentReportView.as_view(), name="report-comment"),
+    path(
+        "post/<str:slug>/comment/",
+        views.CommentCreateView.as_view(),
+        name="post-comment",
+    ),
+    path(
+        "comment/<int:pk>/report/",
+        views.CommentReportView.as_view(),
+        name="report-comment",
+    ),
     path("create/", views.PostCreateView.as_view(), name="post-create"),
     path(
-        "post/<str:slug>/edit/", views.PostEditView.as_view(), name="post-edit"
+        "post/<str:slug>/edit/",
+        views.PostEditView.as_view(),
+        name="post-edit",
     ),
     path(
         "post/<str:slug>/delete/",

@@ -14,8 +14,8 @@ from decouple import config
 
 
 os.environ.setdefault(
-"DJANGO_SETTINGS_MODULE",
-config("DJANGO_SETTINGS_MODULE", default="core.settings.development"),
+    "DJANGO_SETTINGS_MODULE",
+    config("DJANGO_SETTINGS_MODULE", default="core.settings.development"),
 )
 
 application = get_asgi_application()

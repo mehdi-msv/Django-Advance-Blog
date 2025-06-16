@@ -39,4 +39,3 @@ def test_profile_score_methods(test_user):
     profile.decrease_score(40)
     assert profile.score == 10
     assert profile.can_post_directly() is False
-

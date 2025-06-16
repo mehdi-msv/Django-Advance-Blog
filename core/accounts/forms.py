@@ -4,7 +4,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.forms import SetPasswordForm as DjangoSetPasswordForm
 from django.contrib.auth import password_validation
-from .models import Profile, User
+from .models import Profile
 
 
 User = get_user_model()
@@ -14,9 +14,10 @@ class ProfileUpdateForm(forms.ModelForm):
     """
     A simple form for updating user profile information.
     """
+
     class Meta:
         model = Profile
-        fields = ['first_name', 'last_name', 'description', 'image']
+        fields = ["first_name", "last_name", "description", "image"]
 
 
 class UserCreationForm(forms.ModelForm):
@@ -24,12 +25,15 @@ class UserCreationForm(forms.ModelForm):
     A custom form for creating users. Includes an email field and two password fields,
     with validation to ensure they match and secure password setting.
     """
-    password1 = forms.CharField(label='Password', widget=forms.PasswordInput)
-    password2 = forms.CharField(label='Confirm Password', widget=forms.PasswordInput)
+
+    password1 = forms.CharField(label="Password", widget=forms.PasswordInput)
+    password2 = forms.CharField(
+        label="Confirm Password", widget=forms.PasswordInput
+    )
 
     class Meta:
         model = User
-        fields = ['email']
+        fields = ["email"]
 
     def clean_password2(self):
         """
@@ -56,6 +60,7 @@ class CustomPasswordChangeForm(PasswordChangeForm):
     """
     A custom password change form that prevents using the old password as the new password.
     """
+
     def clean_new_password1(self):
         """
         Ensures that the new password is different from the old password.
@@ -75,11 +80,12 @@ class CustomSetPasswordForm(DjangoSetPasswordForm):
     A custom set password form used when resetting a user's password.
     Includes validation for password strength and confirmation.
     """
+
     def clean_new_password1(self):
         """
         Validates that the new password is provided and meets password policy.
         """
-        password1 = self.cleaned_data.get('new_password1')
+        password1 = self.cleaned_data.get("new_password1")
         if not password1:
             raise forms.ValidationError(_("New password is required."))
 
@@ -98,7 +104,9 @@ class CustomSetPasswordForm(DjangoSetPasswordForm):
         password2 = self.cleaned_data.get("new_password2")
 
         if not password2:
-            raise forms.ValidationError(_("Please confirm your new password."))
+            raise forms.ValidationError(
+                _("Please confirm your new password.")
+            )
 
         if password1 and password2 and password1 != password2:
             raise forms.ValidationError(_("The two passwords do not match."))

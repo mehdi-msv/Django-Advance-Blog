@@ -8,7 +8,9 @@ class PostSitemap(Sitemap):
     priority = 0.8
 
     def items(self):
-        return Post.objects.filter(status=True, published_date__lte=timezone.now())
+        return Post.objects.filter(
+            status=True, published_date__lte=timezone.now()
+        )
 
     def lastmod(self, obj):
         return obj.updated_date

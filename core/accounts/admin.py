@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import User, Profile
 from .models.throttle_records import ThrottleRecord
+
 # Register your models here.
 
 
@@ -66,12 +67,14 @@ class CustomUserAdmin(UserAdmin):
         ),
     )
 
+
 @admin.register(ThrottleRecord)
 class ThrottleRecordAdmin(admin.ModelAdmin):
     list_display = ("scope", "ident", "level", "expires_at", "updated_at")
     search_fields = ("ident", "scope")
     list_filter = ("scope",)
     ordering = ("-updated_at",)
+
 
 admin.site.register(Profile)
 admin.site.register(User, CustomUserAdmin)

@@ -3,15 +3,19 @@
 # Staging-specific settings
 # ==============================
 
-from .base import *
+from .base import *  # noqa: F403,F401
 
 
 DEBUG = config("DEBUG", cast=bool, default=False)
-ALLOWED_HOSTS = config("ALLOWED_HOSTS", cast=lambda v: [s.strip() for s in v.split(",")])
+ALLOWED_HOSTS = config(
+    "ALLOWED_HOSTS", cast=lambda v: [s.strip() for s in v.split(",")]
+)
 
 DATABASES = {
     "default": {
-        "ENGINE": config("DB_ENGINE", default="django.db.backends.postgresql"),
+        "ENGINE": config(
+            "DB_ENGINE", default="django.db.backends.postgresql"
+        ),
         "NAME": config("DB_NAME", default="POSTGRES_DB"),
         "USER": config("DB_USER", default="POSTGRES_USER"),
         "PASSWORD": config("DB_PASSWORD", default="POSTGRES_PASSWORD"),
