@@ -7,20 +7,47 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  Test:
+    name: Run Tests
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Create .env.stage file from secret
-      run: |
-        cat <<EOF > .env.stage
-        ${{ secrets.ENV_STAGE }}
-        EOF
+      - name: Create .env.stage file from secret
+        run: |
+          cat <<EOF > .env.stage
+          ${{ secrets.ENV_STAGE }}
+          EOF
 
-    - name: Start containers
-      run: docker compose -f docker-compose-stage.yml up -d
+      - name: Start containers
+        run: docker compose -f docker-compose-stage.yml up -d
 
-    - name: Run tests
-      run: docker compose -f docker-compose-stage.yml exec backend sh -c "flake8 && pytest ."
+      - name: Run tests
+        run: docker compose -f docker-compose-stage.yml exec backend sh -c "flake8 && pytest ."
+
+  Deploy:
+    name: Deploy to Production
+    needs: Test
+    if: ${{ always() && contains(join(needs.*.result, ','), 'success') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Connect and deploy to VPS
+        uses: appleboy/ssh-action@v0.1.0
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          script: |
+            cd ${{ secrets.PROJECT_DIR }}
+
+            cat <<EOF > .env.prod
+            ${{ secrets.ENV_PROD }}
+            EOF
+
+            docker compose -f docker-compose-prod.yml down
+            git pull
+            docker compose -f docker-compose-prod.yml up -d --build
