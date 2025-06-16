@@ -1,4 +1,4 @@
-FROM python:3.8-slim-buster
+FROM python:3.9-slim-buster
 
 
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -11,6 +11,11 @@ COPY requirements.txt /app/
 
 RUN pip3 install --upgrade pip
 
-RUN pip3 install -r requirements.txt
+RUN apt-get update \
+    && apt-get install -y curl \
+    && apt-get install -y libpq-dev gcc \
+    && apt-get clean
+
+RUN pip3 install --timeout=120 --retries=20 --no-cache-dir -i https://pypi.org/simple -r requirements.txt
 
 COPY ./core /app/

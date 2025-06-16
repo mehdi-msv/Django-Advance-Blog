@@ -1,0 +1,173 @@
+/* 1) Base and Body Styles */
+body {
+  font-family: "Arial", sans-serif;
+  background-color: #f8f9fa;
+  direction: ltr;
+  text-align: left;
+  padding: 20px 0;
+}
+
+/* 2) Navbar Container */
+.navBar {
+  gap: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 16px 0;
+}
+
+/* 3) Search Bar Styling */
+.searchBar {
+  background: #e9ecef;
+  display: flex;
+  align-items: center;
+  border-radius: 25px;
+  padding: 0 12px;
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+}
+
+.searchBar input {
+  border: none;
+  background: transparent;
+  padding: 8px;
+  width: 100%;
+  font-size: 14px;
+}
+
+.searchBar input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.search-icon {
+  color: #007bff;
+  font-size: 18px;
+  margin-left: 8px;
+  cursor: pointer;
+}
+
+/* 4) Cards Container */
+.cards ul {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+}
+
+/* 5) Individual Card Styling */
+.cards li {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  padding: 16px;
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  /* Allow the card to expand vertically based on content */
+}
+
+.cards li:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* 6) Image Inside Card */
+.cards img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* 7) Card Title */
+.cards h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 12px 0 6px;
+}
+
+/* 8) Text Block (Truncated 15 Words Should Wrap) */
+.cards .text {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 10px;
+  line-height: 1.6;
+
+  /* Ensure normal wrapping at spaces */
+  white-space: normal;
+
+  /* Break long unbroken strings if needed */
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+/* 9) Button/Card Author Badge */
+.button-card {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 10px;
+}
+
+.buy-btn {
+  background-color: #007bff;
+  color: white;
+  text-align: center;
+  padding: 8px 12px;
+  border-radius: 5px;
+  font-size: 14px;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+}
+
+.buy-btn:hover {
+  background-color: #0056b3;
+}
+
+/* 10) Category Filter Dropdown */
+.nameFilter {
+  max-width: 160px;
+  font-size: 14px;
+}
+
+/* 11) Pagination Controls */
+.Pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 25px;
+}
+
+.Pagination a,
+.Pagination span {
+  padding: 8px 12px;
+  border-radius: 5px;
+  background-color: #007bff;
+  color: white;
+  text-decoration: none;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.Pagination a:hover {
+  background-color: #0056b3;
+}
+
+.Pagination p.current {
+  font-weight: bold;
+  color: #007bff;
+  border-bottom: 2px solid #007bff;
+}
+
+.Pagination span.disabled {
+  background-color: #ced4da;
+  color: #6c757d;
+  cursor: not-allowed;
+}

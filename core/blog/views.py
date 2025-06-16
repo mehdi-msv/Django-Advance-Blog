@@ -1,146 +1,324 @@
 from django.views.generic import (
-    TemplateView,
-    RedirectView,
     ListView,
     DetailView,
-    FormView,
     CreateView,
     UpdateView,
     DeleteView,
+    FormView,
 )
-from django.contrib.auth.mixins import (
-    LoginRequiredMixin,
-    PermissionRequiredMixin,
-)
-from .models import Post
+from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.utils import timezone
+from django.urls import reverse
+from django.views import View
+from django.contrib import messages
+from django.shortcuts import get_object_or_404, redirect
 from accounts.models import Profile
-from .forms import ContactForm, PostForm
+from django.core.cache import cache
+from django.db.models import Q
+from .tasks import create_comment_task
+from .models import Post, Comment, CommentReport, Category
+from .forms import PostForm, CommentForm
+from .permissions import VerifiedUserRequiredMixin, CustomLoginRequiredMixin
 
 # Create your views here.
 
-# Function-based view to show index page
-'''
-def fbv_index(request):
-    """
-    This is a function-based view to show index page
-    """
-    context = {'name':'mehdi'}
-    return render(request, 'index.html',context)
-'''
-# Redirecting to Django's official website with Function-based view
-"""
-def redirect_to_django(request, *args, **kwargs):
-    post = Post.objects.get(pk=kwargs['pk'])
-    print(post)
-    return redirect('https://www.djangoproject.com')
-"""
 
-
-class IndexView(TemplateView):
+class PostListView(ListView):
     """
-    This is a class-based view to show index page
+    Displays a list of blog posts with filtering and pagination.
     """
 
-    template_name = "index.html"
+    model = Post
+    context_object_name = "posts"
+    template_name = "blog/post_list.html"
+    paginate_by = 3
+    ordering = ["-published_date"]
+
+    def get_queryset(self):
+        # Build a cache key based on page number, search term, and selected category
+        page = self.request.GET.get("page", 1)
+        search_query = self.request.GET.get("search", "").strip()
+        category_name = self.request.GET.get("category", "").strip()
+        cache_key = f"cached_posts_page_{page}_search_{search_query}_cat_{category_name}"
+
+        # Try to retrieve the filtered queryset from cache
+        cached_queryset = cache.get(cache_key)
+        if cached_queryset is not None:
+            return cached_queryset
+
+        # Base filter: only include posts that are published and have a publish date in the past
+        base_filter = Q(status=True, published_date__lte=timezone.now())
+
+        # If a search term is provided, filter by title or content (case-insensitive)
+        if search_query:
+            base_filter &= Q(title__icontains=search_query) | Q(
+                content__icontains=search_query
+            )
+
+        # If a category is selected, filter by that category's name
+        if category_name:
+            base_filter &= Q(category__name=category_name)
+
+        # Execute the final query, order by newest first, and remove duplicates
+        queryset = (
+            Post.objects.filter(base_filter)
+            .order_by("-published_date")
+            .distinct()
+        )
+
+        # Store the result in cache for 10 minutes (tweak as needed)
+        cache.set(cache_key, queryset, 60 * 10)
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["name"] = "mehdi"
-        context["posts"] = Post.objects.all()
+
+        # Pass the current search and category parameters to the template for form pre-filling
+        context["search_query"] = self.request.GET.get("search", "")
+        context["selected_category"] = self.request.GET.get("category", "")
+
+        # Provide the full list of categories for the dropdown
+        context["categories"] = Category.objects.all()
         return context
 
 
-class RedirectToDjango(RedirectView):
-    """ """
-
-    url = "https://www.djangoproject.com/"
-
-    def get_redirect_url(self, *args, **kwargs):
-        post = Post.objects.get(pk=kwargs["pk"])
-        print(post)
-        return super().get_redirect_url(*args, **kwargs)
-
-
-class PostListView(PermissionRequiredMixin, ListView):
+class PostDetailView(CustomLoginRequiredMixin, DetailView):
     """
-    This is a class-based view to show list of posts.
+    Displays the detail page of a single post.
+    Only accessible to logged-in users.
     """
 
-    permission_required = "blog.view_post"
-    #    model = Post
-    queryset = Post.objects.filter(status=True)
-    context_object_name = "posts"
-    ordering = "-published_date"
-    paginate_by = 2
-    # def get_queryset(self):
-    #     posts = Post.objects.filter(status=True)
-    #     return posts
-
-
-class PostDetailView(LoginRequiredMixin, DetailView):
-    """
-    This is a class-based view to show detail page of a post.
-    """
-
-    model = Post
     context_object_name = (
-        "post"  # for using post instead of object in template
+        "post"  # Use 'post' instead of default 'object' in the template
     )
 
+    def get_context_data(self, **kwargs):
+        """
+        Adds comments and comment form to the context.
+        """
+        context = super().get_context_data(**kwargs)
+        post = self.object
 
-#   template_name = 'blog/post_detail.html'
-class ContactView(FormView):
+        # Get approved comments for this post
+        context["comments"] = Comment.objects.filter(
+            post=post, parent__isnull=True, is_hidden=False, is_approved=True
+        ).prefetch_related(
+            "replies"
+        )  # Optimize for nested replies
+
+        # Provide a comment form with pre-filled post reference
+        context["form"] = CommentForm(initial={"post": post})
+        return context
+
+    def get_queryset(self):
+        return Post.objects.filter(
+            Q(status=True, published_date__lte=timezone.now())
+            | Q(author=self.request.user.profile)
+        ).distinct()
+
+
+class CommentCreateView(
+    CustomLoginRequiredMixin, VerifiedUserRequiredMixin, FormView
+):
     """
-    This is a class-based view to show contact form.
+    Handles creation of new comments using a Django FormView.
+    Only logged-in and verified users can post comments.
+    Uses asynchronous task for comment creation.
     """
 
-    template_name = "blog/contact_us.html"
-    form_class = ContactForm
-    success_url = "/blog/posts/"
+    form_class = CommentForm
+    http_method_names = ["post"]  # Only allow POST requests
 
     def form_valid(self, form):
-        # This method is called when valid form data has been POSTed.
-        # It should return an HttpResponse.
-        return super(ContactView, self).form_valid(form)
+        """
+        Called when the submitted form is valid.
+        Triggers a Celery task to create the comment asynchronously.
+        """
+        post_slug = self.kwargs.get("slug")
+        profile_id = self.request.user.profile.id
+        text = form.cleaned_data["text"]
+        parent_id = self.request.POST.get("parent") or None
+
+        create_comment_task.delay(post_slug, profile_id, text, parent_id)
+        messages.success(
+            self.request,
+            "Your comment has been submitted and is awaiting approval.",
+        )
+        return redirect("blog:post-detail", slug=post_slug)
+
+    def form_invalid(self, form):
+        """
+        Called when the submitted form is invalid.
+        Displays an error message and redirects back to the post detail page.
+        """
+        messages.error(
+            self.request,
+            "There was an error submitting your comment. Please check the form and try again.",
+        )
+        return redirect("blog:post-detail", slug=self.kwargs.get("slug"))
 
 
-class PostCreateView(LoginRequiredMixin, CreateView):
+class CommentReportView(
+    CustomLoginRequiredMixin, VerifiedUserRequiredMixin, View
+):
     """
-    This is a class-based view to create a new post.
+    Allows users to report inappropriate comments.
+    Prevents duplicate reports and self-reporting.
+    """
+
+    def get(self, request, pk):
+        comment = get_object_or_404(Comment, pk=pk)
+        user_profile = request.user.profile
+
+        # Prevent users from reporting their own comment
+        if comment.author == user_profile:
+            messages.warning(request, "You cannot report your own comment.")
+        else:
+            # Check if the user has already reported this comment
+            already_reported = CommentReport.objects.filter(
+                user=user_profile, comment=comment
+            ).exists()
+            if not already_reported:
+                # Create a new report and trigger any report-related logic
+                CommentReport.objects.create(
+                    user=user_profile, comment=comment
+                )
+                comment.report()  # increments a report count and decreases the author's score
+                messages.success(request, "Report submitted successfully.")
+            else:
+                messages.info(
+                    request, "You have already reported this comment."
+                )
+
+        return redirect("blog:post-detail", slug=comment.post.slug)
+
+
+class PostCreateView(
+    CustomLoginRequiredMixin, PermissionRequiredMixin, CreateView
+):
+    """
+    View to allow authorized users to create a new blog post.
+    Only users with the 'blog.add_post' permission are allowed.
+    Automatically assigns the logged-in user as the author.
+    If the user provides a new category, it will be created and assigned to the post.
     """
 
     model = Post
-    #   fields = ['title', 'content', 'category', 'status', 'published_date'] ##can use it instead of form_class
     form_class = PostForm
-    success_url = "/blog/posts/"
+    template_name = "blog/post_create.html"
+    permission_required = "blog.add_post"
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Override dispatch to handle unauthorized access (GET or POST).
+        Redirects to the post list with an error message if permission is denied.
+        """
+        if not request.user.has_perm(self.permission_required):
+            messages.error(
+                request, "You do not have permission to access this page."
+            )
+            return redirect("blog:post-list")
+        return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        # This method is called when valid form data has been POSTed.
-        # It should return an HttpResponse.
+        """
+        Assign the logged-in user as the post's author.
+        If a new category is provided by the user, create and assign it.
+        """
+        new_category = self.request.POST.get("new_category")
+        if new_category:
+            category_obj, _ = Category.objects.get_or_create(
+                name=new_category
+            )
+            form.instance.category = category_obj
+
         form.instance.author = Profile.objects.get(user=self.request.user)
-        return super(PostCreateView, self).form_valid(form)
+        messages.success(
+            self.request, "Your post has been created successfully."
+        )
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        """
+        Handle invalid form submission with an error message.
+        """
+        messages.error(
+            self.request,
+            "An error occurred while creating the post. Please review the form and try again.",
+        )
+        return super().form_invalid(form)
+
+    def get_success_url(self):
+        """
+        Redirect to the user's profile page upon successful post creation.
+        """
+        return reverse("accounts:profile")
 
 
-class PostEditView(LoginRequiredMixin, UpdateView):
+class PostEditView(CustomLoginRequiredMixin, UpdateView):
     """
-    This is a class-based view to edit an existing post.
+    A class-based view to edit an existing post.
+    Only accessible to the author of the post.
     """
 
     model = Post
     form_class = PostForm
-    success_url = "/blog/posts"
+    template_name = "blog/post_edit.html"
+    context_object_name = "post"
 
     def get_queryset(self):
+        # Limit editable posts to those owned by the logged-in user
         return Post.objects.filter(author__user=self.request.user)
 
+    def form_valid(self, form):
+        """
+        Called when valid form data has been submitted.
+        Saves the form and shows a success message.
+        """
+        messages.success(self.request, "The post was updated successfully.")
+        return super().form_valid(form)
 
-class PostDeleteView(LoginRequiredMixin, DeleteView):
+    def form_invalid(self, form):
+        """
+        Called when the submitted form is invalid.
+        Shows an error message.
+        """
+        messages.error(
+            self.request,
+            "There was an error updating the post. Please try again.",
+        )
+        return super().form_invalid(form)
+
+    def get_success_url(self):
+        return reverse("blog:post-detail", kwargs={"slug": self.object.slug})
+
+
+class PostDeleteView(CustomLoginRequiredMixin, DeleteView):
     """
-    This is a class-based view to delete an existing post.
+    Handles the deletion of a post by its author.
+    Ensures only the owner of the post can delete it.
+    Displays a success message upon successful deletion.
     """
 
     model = Post
-    success_url = "/blog/posts/"
+    http_method_names = ["post"]  # Only allow POST requests
 
     def get_queryset(self):
+        # Only allow deletion of posts owned by the logged-in user
         return Post.objects.filter(author__user=self.request.user)
+
+    def delete(self, request, *args, **kwargs):
+        """
+        Override the default delete method to add a success message.
+        """
+        post = self.get_object()
+        messages.success(
+            request, f"Post '{post.title}' was successfully deleted."
+        )
+        return super().delete(request, *args, **kwargs)
+
+    def get_success_url(self):
+        """
+        Redirect to the user's profile page upon successful post deletion.
+        """
+        return reverse("accounts:profile")

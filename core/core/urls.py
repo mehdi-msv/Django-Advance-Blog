@@ -23,6 +23,12 @@ from rest_framework.documentation import include_docs_urls
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from django.views.generic import RedirectView
+from django.contrib.sitemaps.views import sitemap
+from django.views.decorators.cache import cache_page
+
+from blog.sitemaps import PostSitemap
+
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -37,9 +43,13 @@ schema_view = get_schema_view(
     permission_classes=(permissions.AllowAny,),
 )
 
+sitemaps = {
+    "posts": PostSitemap(),
+}
 
 # Default URL configuration for the core project.
 urlpatterns = [
+    path("", RedirectView.as_view(url="/blog/")),
     path("admin/", admin.site.urls),
     path("blog/", include("blog.urls")),
     path("accounts/", include("accounts.urls")),
@@ -62,7 +72,20 @@ urlpatterns = [
         schema_view.with_ui("redoc", cache_timeout=0),
         name="schema-redoc",
     ),
+    path("ckeditor/", include("ckeditor_uploader.urls")),
+    path(
+        "sitemap.xml",
+        cache_page(86400)(sitemap),
+        {"sitemaps": sitemaps},
+        name="cached-sitemap",
+    ),
+    path("robots.txt", include("robots.urls")),
 ]
+
+handler400 = "core.views.errors.error_400"  # bad request
+handler403 = "core.views.errors.error_403"  # permission denied
+handler404 = "core.views.errors.error_404"  # page not found
+handler500 = "core.views.errors.error_500"  # server error
 
 # Serving static and media for development
 if settings.DEBUG:

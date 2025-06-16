@@ -1,0 +1,67 @@
+services:
+  redis:
+    container_name: redis
+    restart: always
+    image: redis
+    expose:
+      - "6379"
+    command: redis-server --save 60 1 --loglevel warning
+
+  backend:
+    build: .
+    container_name: backend
+    command: sh -c "python manage.py prepare_app && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./core:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    env_file:
+      - .env.development
+
+  celery_worker:
+    build: .
+    image: celery_worker
+    command: celery -A core worker -l INFO
+    depends_on:
+      - redis
+      - backend
+    volumes:
+      - ./core:/app
+      - media_volume:/app/media
+    env_file:
+      - .env.development
+
+  celery_beat:
+    build: .
+    image: celery_beat
+    command: celery -A core beat -l info
+    restart: always
+    depends_on:
+      - backend
+      - redis
+    volumes:
+      - ./core:/app
+    env_file:
+      - .env.development
+
+  smtp4dev:
+    image: rnwood/smtp4dev:v3
+    restart: always
+    ports:
+      - '5000:80'
+      - '25:25'
+      - '143:143'
+    volumes:
+      - smtp4dev-data:/smtp4dev
+    environment:
+      - ServerOptions__Urls=http://*:80
+      - ServerOptions__HostName=smtp4dev
+
+volumes:
+  smtp4dev-data:
+  static_volume:
+  media_volume:

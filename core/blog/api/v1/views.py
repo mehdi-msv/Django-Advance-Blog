@@ -1,180 +1,162 @@
-from rest_framework.permissions import (
-    IsAuthenticatedOrReadOnly,
-)
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 from rest_framework.response import Response
-from .serializers import PostSerializer, CategorySerializer
-from ...models import Post, Category
 from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
-from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from django.core.cache import cache
+from django.db.models import Q, F, Value, CharField
+from django.utils import timezone
+from django.db.models.functions import Concat
+
+from .permissions import HasAddPostPermission, IsAuthenticatedForRetrieve
 from .paginations import PostsPagination
-
-
-"""
-# from rest_framework.decorators import api_view,permission_classes
-
-@api_view(["GET", "POST"])
-@permission_classes([IsAuthenticatedOrReadOnly])
-def postList(request):
-    if request.method == "GET":
-        posts = Post.objects.filter(status=True)
-        serializer = PostSerializer(posts,many=True)
-        return Response(serializer.data)
-    elif request.method == "POST":
-        serializer = PostSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        @api_view(["GET", "PUT", "DELETE"])
-
-
-@permission_classes([IsAuthenticatedOrReadOnly])
-def postDetail(request,id):
-    # try:
-    #     post = Post.objects.get(pk=id)
-    #     serializer = PostSerializer(post)
-    #     return Response(serializer.data)
-    # except Post.DoesNotExist:
-    #     return Response('{detail:not found}', status=status.HTTP_404_NOT_FOUND)
-    post = get_object_or_404(Post,pk=id,status=True)
-    if request.method == "GET":
-        serializer = PostSerializer(post)
-        return Response(serializer.data)
-    elif request.method == "PUT":
-        serializer = PostSerializer(post, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
-    elif request.method == "DELETE":
-        post.delete()
-        return Response({"detail": "Your post has been successfully removed."},status=status.HTTP_204_NO_CONTENT)
-    """
-
-"""
-#from rest_framework.views import APIView
-
-class PostList(APIView):
-    '''
-    This class-based view provides an API endpoint for listing and creating posts.
-    '''
-    permission_classes = [IsAuthenticatedOrReadOnly]
-    serializer_class = PostSerializer
-    def get(request, self):
-        '''
-        Retrieve all posts.
-        '''
-        posts = Post.objects.filter(status=True)
-        serializer = PostSerializer(posts,many=True)
-        return Response(serializer.data)
-    def post(self, request):
-        '''
-        Create a new post.
-        '''
-        serializer = PostSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-class PostDetail(APIView):
-    '''
-    This class-based view provides an API endpoint for retrieving, updating, and deleting posts.
-    '''
-    permission_classes = [IsAuthenticatedOrReadOnly]
-    serializer_class = PostSerializer
-    def get(self, request, id):
-        '''
-        Retrieve a specific post.
-        '''
-        post = get_object_or_404(Post,pk=id,status=True)
-        serializer = self.serializer_class(post)
-        return Response(serializer.data)
-    def put(self, request, id):
-        '''
-        Update a specific post.
-        '''
-        post = get_object_or_404(Post,pk=id,status=True)
-        serializer = self.serializer_class(post, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
-    def delete(self, request, id):
-        '''
-        Delete a specific post.
-        '''
-        post = get_object_or_404(Post,pk=id,status=True)
-        post.delete()
-        return Response({"detail": "Your post has been successfully removed."},status=status.HTTP_204_NO_CONTENT)
-"""
-"""
-class PostList(ListCreateAPIView):
-    '''
-    This class-based view provides an API endpoint for listing and creating posts.
-    '''
-    queryset = Post.objects.filter(status=True)
-    serializer_class = PostSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
-class PostDetail(RetrieveUpdateDestroyAPIView):
-    '''
-    This class-based view provides an API endpoint for retrieving, updating, and deleting posts.
-    '''
-    lookup_field = 'id'
-    queryset = Post.objects.filter(status=True)
-    serializer_class = PostSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response({"detail": "Your post has been successfully removed."},status=status.HTTP_204_NO_CONTENT)
-"""
+from .serializers import PostSerializer, CategorySerializer
+from ...models import Post, Category, CommentReport, Comment
+from ...tasks import create_comment_task
 
 
 class PostModelViewSet(ModelViewSet):
     """
-    This class-based view provides an API endpoint for listing,
-    creating, retrieving, updating, and deleting posts.
+    API endpoint for Posts management.
+
+    Features:
+    - Cached pagination for list view.
+    - Filter by category name and author email.
+    - Search by author's full name, title, and content.
+    - Ordering by publish date, creation date, and author full name.
+    - Only authors can update/delete their own posts.
     """
 
-    queryset = Post.objects.filter(status=True)
     serializer_class = PostSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticatedForRetrieve]
+    pagination_class = PostsPagination
+    lookup_field = "slug"
+
     filter_backends = [
         DjangoFilterBackend,
         filters.SearchFilter,
         filters.OrderingFilter,
     ]
-    filterset_fields = {
-        "author": ["exact"],
-        "category": ["in", "exact"],
-        "status": ["exact"],
-    }
-    search_fields = [
-        "author__user__email",
-        "title",
-        "content",
-        "category__name",
-    ]
+    filterset_fields = ["category__name"]
+    search_fields = ["author_full_name", "title", "content"]
     ordering_fields = ["published_date"]
-    pagination_class = PostsPagination
+    ordering = ["-published_date"]
 
-    @action(detail=False, methods=["get"])
-    def get_ok(self, request):
+    def get_queryset(self):
+        user = self.request.user
+        queryset = Post.objects.annotate(
+            author_full_name=Concat(
+                F("author__first_name"),
+                Value(" "),
+                F("author__last_name"),
+                output_field=CharField(),
+            )
+        )
+
+        if self.action == "list":
+            page = self.request.query_params.get("page", 1)
+            cache_key = f"post_list_page_{page}"
+            cached = cache.get(cache_key)
+            if cached:
+                return cached
+
+            filtered = queryset.filter(
+                status=True, published_date__lte=timezone.now()
+            )
+            cache.set(
+                cache_key, filtered, timeout=600
+            )  # Cache for 10 minutes
+            return filtered
+
+        if self.action == "retrieve":
+            return queryset.filter(
+                (
+                    Q(status=True, published_date__lte=timezone.now())
+                    | Q(author__user=user)
+                )
+            )
+
+        # Restrict update/delete to user's own posts
+        return queryset.filter(author__user=user)
+
+    def get_permissions(self):
+        if self.action == "create":
+            return [HasAddPostPermission()]
+        return super().get_permissions()
+
+    @action(
+        detail=True, methods=["post"], permission_classes=[IsAuthenticated]
+    )
+    def comment(self, request, slug=None):
+        """
+        Submit a comment asynchronously via Celery.
+        Supports nested replies with optional 'parent' field.
+        """
+        text = request.data.get("text")
+        parent_id = request.data.get("parent")
+
+        create_comment_task.delay(
+            post_slug=slug,
+            profile_id=request.user.profile.id,
+            text=text,
+            parent_id=parent_id,
+        )
         return Response(
-            {"detail": "API is working correctly."}, status=status.HTTP_200_OK
+            {"detail": "Comment submitted and pending approval."},
+            status=status.HTTP_202_ACCEPTED,
+        )
+
+    @action(
+        detail=False, methods=["post"], permission_classes=[IsAuthenticated]
+    )
+    def report_comment(self, request):
+        """
+        Report a comment by ID.
+        - User cannot report own comment.
+        - Duplicate reports ignored.
+        """
+        comment_id = request.data.get("comment_id")
+        try:
+            comment = Comment.objects.get(pk=comment_id)
+        except Comment.DoesNotExist:
+            return Response(
+                {"detail": "Comment not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if comment.author == request.user.profile:
+            return Response(
+                {"detail": "You cannot report your own comment."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if CommentReport.objects.filter(
+            user=request.user.profile, comment=comment
+        ).exists():
+            return Response(
+                {"detail": "You have already reported this comment."},
+                status=status.HTTP_200_OK,
+            )
+
+        CommentReport.objects.create(
+            user=request.user.profile, comment=comment
+        )
+        comment.report()  # Increase report count or trigger logic
+        return Response(
+            {"detail": "Report submitted."}, status=status.HTTP_201_CREATED
         )
 
 
 class CategoryModelViewSet(ModelViewSet):
     """
-    This class-based view provides an API endpoint for listing,
-    creating, retrieving, updating, and deleting categories.
+    API endpoint for managing categories.
+    Supports list, create, retrieve, update, and delete operations.
+    Access restricted to admin users.
     """
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdminUser]
+    lookup_field = "name"  # Use 'name' instead of default 'pk' for lookups

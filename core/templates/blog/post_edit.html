@@ -1,0 +1,72 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="{% static 'blog/addPost.css' %}" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <title>Edit Post</title>
+  </head>
+  <body>
+    {% include 'messages/messages.html' %}
+    <div class="container">
+      <h2>Edit Post</h2>
+
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+        <!-- Post Title -->
+        <label for="{{ form.title.id_for_label }}">Post Title:</label>
+        {{ form.title.errors }}
+        {{ form.title }}
+
+        <!-- Post Image + Post Status in one row -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="{{ form.image.id_for_label }}">Post Image:</label>
+            {{ form.image.errors }}
+            {{ form.image }}
+          </div>
+          <div class="col-md-6 d-flex align-items-end">
+            <div>
+              <label for="{{ form.status.id_for_label }}">Post Status:</label><br />
+              {{ form.status.errors }}
+              {{ form.status }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Post Content -->
+        <label for="{{ form.content.id_for_label }}">Post Content:</label>
+        <div class="mb-3">{{ form.content.errors }}
+          {{ form.media }}
+          {{ form.content }}</div>
+
+        <!-- Post Published Date -->
+        <label for="{{ form.published_date.id_for_label }}">Post Published Date:</label>
+        {{ form.published_date.errors }}
+        {{ form.published_date }}
+
+        <!-- Category -->
+        <label for="{{ form.category.id_for_label }}">Category:</label>
+        {{ form.category.errors }}
+        {{ form.category }}
+
+        <!-- New Category (if not in the list) -->
+        <label for="{{ form.new_category.id_for_label }}">Category:</label>
+        {{ form.new_category.errors }}
+        {{ form.new_category }}
+
+        <div class="buttons">
+          <button type="submit" class="submit-btn">Submit</button>
+          <button type="button" class="cancel-btn" onclick="window.location.href='{% url 'accounts:profile' %}'">Cancel</button>
+        </div>
+      </form>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
