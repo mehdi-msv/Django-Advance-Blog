@@ -7,16 +7,17 @@ on:
     branches: [ "main" ]
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
-    
+
+    - name: Create .env.stage file from secret
+      run: echo "${{ secrets.ENV_STAGE }}" > .env.stage
+
     - name: Start containers
       run: docker compose -f docker-compose-stage.yml up -d
-    
+
     - name: Run tests
       run: docker compose -f docker-compose-stage.yml exec backend sh -c "flake8 && pytest ."
