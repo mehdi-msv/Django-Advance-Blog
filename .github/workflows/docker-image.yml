@@ -15,8 +15,9 @@ jobs:
 
     - name: Create .env.stage file from secret
       run: |
-        echo "${{ secrets.ENV_STAGE }}" > .env.stage
-        cat .env.stage
+        cat <<EOF > .env.stage
+        ${{ secrets.ENV_STAGE }}
+        EOF
 
     - name: Start containers
       run: docker compose -f docker-compose-stage.yml up -d
