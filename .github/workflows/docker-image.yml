@@ -19,4 +19,4 @@ jobs:
       run: docker compose -f docker-compose-stage.yml up -d
     
     - name: Run tests
-      run: docker compose exec backend sh -c "flake8 && pytest ."
+      run: docker compose -f docker-compose-stage.yml exec backend sh -c "flake8 && pytest ."
