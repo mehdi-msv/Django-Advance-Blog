@@ -44,7 +44,7 @@ jobs:
           script: |
             cd ${{ secrets.PROJECT_DIR }}
 
-            cat <<EOF > .env.prod
+            cat <<EOF > .env.production
             ${{ secrets.ENV_PROD }}
             EOF
 
