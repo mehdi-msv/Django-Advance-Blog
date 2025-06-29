@@ -163,3 +163,4 @@ cython_debug/
 .env.development
 .env.production
 .env.stage
+.env.nginx

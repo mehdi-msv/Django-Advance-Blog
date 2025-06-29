@@ -13,8 +13,13 @@ services:
       - ./html:/usr/share/nginx/html
       - /etc/letsencrypt:/etc/letsencrypt
       - ./nginx/custom:/etc/nginx/conf.d:ro
+    env_file:
+      - .env.nginx
     networks:
       - web
+    depends_on:
+      backend:
+        condition: service_healthy
 
   acme-companion:
     image: nginxproxy/acme-companion
@@ -23,9 +28,7 @@ services:
     depends_on:
       - nginx-proxy
     env_file:
-      - .env.production
-    environment:
-    - NGINX_PROXY_CONTAINER=${NGINX_PROXY_CONTAINER}
+      - .env.nginx
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./certs:/etc/nginx/certs
@@ -53,10 +56,6 @@ services:
         condition: service_healthy
     env_file:
       - .env.production
-    environment:
-      - VIRTUAL_HOST=${VIRTUAL_HOST}
-      - LETSENCRYPT_HOST=${LETSENCRYPT_HOST}
-      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
     networks:
       - web
     healthcheck:
