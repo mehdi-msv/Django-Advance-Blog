@@ -57,6 +57,12 @@ services:
       - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
     networks:
       - web
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--output", "/dev/null", "http://127.0.0.1:8000"]
+      start_period: 60s
+      interval: 60s
+      timeout: 10s
+      retries: 5
 
   postgres:
     image: postgres:latest
