@@ -2,5 +2,5 @@
 
 {% block html %}
 {{ user }}, this is an <strong>email verifications</strong> message.
-<a href="http://127.0.0.1:80/accounts/verify/{{ token }}/">verify your email</a>
+<a href="{{ domain }}/accounts/verify/{{ token }}/">verify your email</a>
 {% endblock %}

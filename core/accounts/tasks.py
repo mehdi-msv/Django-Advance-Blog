@@ -9,7 +9,7 @@ from django.utils.module_loading import import_string
 from .utils import SCOPE_CONFIG_MAP
 from .models import Profile
 from .models.throttle_records import ThrottleRecord
-from core.settings.base import EMAIL_HOST_USER
+from core.settings.base import EMAIL_HOST_USER, DOMAIN_NAME
 
 User = get_user_model()
 
@@ -38,9 +38,13 @@ def send_verification_email(user_id):
 
         # Prepare and send the email
         message = EmailMessage(
-            "email/email-confirm.tpl",
-            {"user": user, "token": token},
-            EMAIL_HOST_USER,
+            template_name="email/email-confirm.tpl",
+            context={
+                "user": user,
+                "token": token,
+                "domain": DOMAIN_NAME,
+            },
+            from_email=EMAIL_HOST_USER,
             to=[user.email],
         )
         message.send()
@@ -73,9 +77,13 @@ def send_password_reset_email(user_id):
 
         # Prepare and send the email
         message = EmailMessage(
-            "email/email-password-reset.tpl",
-            {"user": user, "token": token},
-            "mehdi.hunter.3242@gmail.com",
+            template_name="email/email-password-reset.tpl",
+            context={
+                "user": user,
+                "token": token,
+                "domain": DOMAIN_NAME,
+            },
+            from_email=EMAIL_HOST_USER,
             to=[user.email],
         )
         message.send()

@@ -209,3 +209,6 @@ ROBOTS_SITEMAP_VIEW_NAME = "cached-sitemap"
 ROBOTS_USE_SCHEME_IN_HOST = config(
     "ROBOTS_USE_SCHEME_IN_HOST", cast=bool, default=False
 )
+
+
+DOMAIN_NAME = config("DOMAIN_NAME", default="http://127.0.0.1:8000")
