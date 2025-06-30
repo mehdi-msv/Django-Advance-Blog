@@ -12,7 +12,7 @@ services:
       - ./vhost.d:/etc/nginx/vhost.d
       - ./html:/usr/share/nginx/html
       - /etc/letsencrypt:/etc/letsencrypt
-      - ./nginx/custom:/etc/nginx/conf.d:ro
+      - ./nginx/custom/my_proxy_settings.conf:/etc/nginx/conf.d/my_proxy_settings.conf:ro
     env_file:
       - .env.nginx
     networks:
