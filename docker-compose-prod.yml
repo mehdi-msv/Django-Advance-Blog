@@ -8,11 +8,11 @@ services:
       - "443:443"
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
-      - ./certs:/etc/nginx/certs
       - ./vhost.d:/etc/nginx/vhost.d
       - ./html:/usr/share/nginx/html
-      - /etc/letsencrypt:/etc/letsencrypt
-      - ./nginx/custom/my_proxy_settings.conf:/etc/nginx/conf.d/my_proxy_settings.conf:ro
+      # - ./nginx/custom/my_proxy_settings.conf:/etc/nginx/conf.d/my_proxy_settings.conf:ro
+      - letsencrypt:/etc/letsencrypt
+      - acme_sh:/etc/acme.sh
     env_file:
       - .env.nginx
     networks:
@@ -31,10 +31,10 @@ services:
       - .env.nginx
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./certs:/etc/nginx/certs
       - ./vhost.d:/etc/nginx/vhost.d
       - ./html:/usr/share/nginx/html
-      - /etc/letsencrypt:/etc/letsencrypt
+      - letsencrypt:/etc/letsencrypt
+      - acme_sh:/etc/acme.sh 
     networks:
       - web
 
@@ -56,6 +56,7 @@ services:
         condition: service_healthy
     env_file:
       - .env.production
+      - .env.nginx
     networks:
       - web
     healthcheck:
@@ -136,6 +137,10 @@ volumes:
   static_volume:
   media_volume:
   postgres_data:
+  letsencrypt:
+    external: true
+  acme_sh:
+    external: true
 
 networks:
   web:
