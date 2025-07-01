@@ -11,8 +11,7 @@ services:
       - ./vhost.d:/etc/nginx/vhost.d
       - ./html:/usr/share/nginx/html
       # - ./nginx/custom/my_proxy_settings.conf:/etc/nginx/conf.d/my_proxy_settings.conf:ro
-      - letsencrypt:/etc/letsencrypt
-      - acme_sh:/etc/acme.sh
+      - /etc/letsencrypt:/etc/letsencrypt
     env_file:
       - .env.nginx
     networks:
@@ -33,8 +32,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./vhost.d:/etc/nginx/vhost.d
       - ./html:/usr/share/nginx/html
-      - letsencrypt:/etc/letsencrypt
-      - acme_sh:/etc/acme.sh 
+      - /etc/letsencrypt:/etc/letsencrypt
     networks:
       - web
 
@@ -137,10 +135,6 @@ volumes:
   static_volume:
   media_volume:
   postgres_data:
-  letsencrypt:
-    external: true
-  acme_sh:
-    external: true
 
 networks:
   web:
