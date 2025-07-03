@@ -195,7 +195,6 @@ This project is licensed under the [MIT License](LICENSE).
 ## 📬 Contact
 
 Made with ❤️ by [Mehdi Mousavi Rad](mailto:mehdi.mousavi.rad1@gmail.com)  
-Project Demo: https://www.mehdicode.ir/
 
 ---
 
