@@ -164,3 +164,6 @@ cython_debug/
 .env.production
 .env.stage
 .env.nginx
+.env.proxy
+.env.ssl_backend
+/vhost.d

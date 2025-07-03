@@ -23,7 +23,7 @@
             author :{% if post.author.first_name and post.author.last_name %}
               {{ post.author.first_name }} {{ post.author.last_name }}
             {% else %}
-              {{ post.author.username }}
+              {{ post.author.user }}
             {% endif %}
           </p>
         </div>
@@ -41,7 +41,7 @@
                 <span class="comment-author">author: {% if comment.author.first_name and comment.author.last_name %}
               {{ comment.author.first_name }} {{ comment.author.last_name }}
             {% else %}
-              {{ comment.author.username }}
+              {{ comment.author.user }}
             {% endif %}</span>
               </div>
               <p>{{ comment.text }}</p>

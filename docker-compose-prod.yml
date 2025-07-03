@@ -10,10 +10,13 @@ services:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ./vhost.d:/etc/nginx/vhost.d
       - ./html:/usr/share/nginx/html
-      # - ./nginx/custom/my_proxy_settings.conf:/etc/nginx/conf.d/my_proxy_settings.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt
+      - /etc/nginx/certs:/etc/nginx/certs
+      - /etc/acme.sh:/etc/acme.sh
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media 
     env_file:
-      - .env.nginx
+      - .env.proxy
     networks:
       - web
     depends_on:
@@ -27,12 +30,14 @@ services:
     depends_on:
       - nginx-proxy
     env_file:
-      - .env.nginx
+      - .env.proxy
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./vhost.d:/etc/nginx/vhost.d
       - ./html:/usr/share/nginx/html
       - /etc/letsencrypt:/etc/letsencrypt
+      - /etc/nginx/certs:/etc/nginx/certs
+      - /etc/acme.sh:/etc/acme.sh
     networks:
       - web
 
@@ -54,7 +59,7 @@ services:
         condition: service_healthy
     env_file:
       - .env.production
-      - .env.nginx
+      - .env.ssl_backend
     networks:
       - web
     healthcheck:

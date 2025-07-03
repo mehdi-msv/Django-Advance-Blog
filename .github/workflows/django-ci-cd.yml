@@ -48,8 +48,12 @@ jobs:
             ${{ secrets.ENV_PROD }}
             EOF
 
-            cat <<EOF > .env.nginx
-            ${{ secrets.ENV_NGINX }}
+            cat <<EOF > .env.ssl_backend
+            ${{ secrets.ENV_SSL_BACKEND }}
+            EOF
+
+            cat <<EOF > .env.proxy
+            ${{ secrets.ENV_PROXY }}
             EOF
 
             docker compose -f docker-compose-prod.yml down
