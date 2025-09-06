@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.shortcuts import redirect
 from django.utils.functional import cached_property
 from django.core.exceptions import ImproperlyConfigured
+from django.db import transaction
 
 from .models.throttle_records import ThrottleRecord
 
@@ -100,19 +101,32 @@ class AdaptiveDBThrottle(BaseThrottle):
 
     def record_attempt(self, request):
         """
-        Log a failed attempt. Called after sensitive operations like login.
+        Log a failed attempt safely using DB transaction and row-level locking.
+        Prevents race conditions when multiple requests from the same user arrive concurrently.
         """
         self._init_context(request)
 
-        record, created = ThrottleRecord.objects.get_or_create(
-            ident=self.ident,
-            scope=self.scope,
-            defaults={"level": 0, "expires_at": self.now, "attempts": 1},
-        )
-
-        if not created and record.expires_at <= self.now:
-            record.attempts += 1
-            record.save()
+        # Start atomic transaction
+        with transaction.atomic():
+            try:
+                # Lock the row until transaction completes
+                record = ThrottleRecord.objects.select_for_update().get(
+                    ident=self.ident,
+                    scope=self.scope
+                )
+                # If the cooldown has expired, increment attempts
+                if record.expires_at <= self.now:
+                    record.attempts += 1
+                    record.save()
+            except ThrottleRecord.DoesNotExist:
+                # Create a new record if it doesn't exist
+                ThrottleRecord.objects.create(
+                    ident=self.ident,
+                    scope=self.scope,
+                    level=0,
+                    expires_at=self.now,
+                    attempts=1,
+                )
 
     def reset_level(self, request):
         """
